@@ -9,7 +9,9 @@ const APP_SETTINGS_STORE = 'app_settings'; // New store for settings
 const dbPromise = openDB(DB_NAME, DB_VERSION, {
     upgrade(db) {
         if (!db.objectStoreNames.contains(IMAGE_STORE)) {
-            // Store contains: { id: string, file: Blob, prompt: string, source: 'ai' | 'local', studio: 'left' | 'right' }
+            // Store contains flexible objects for media items.
+            // e.g., { id, file, prompt, source, studio, type, duration } for files
+            // or { id, url, prompt, source, studio, type } for YouTube videos
             const imageStore = db.createObjectStore(IMAGE_STORE, { keyPath: 'id' });
             imageStore.createIndex('studio', 'studio', { unique: false });
         }

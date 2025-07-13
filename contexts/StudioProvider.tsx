@@ -1,4 +1,5 @@
 
+
 import React, { createContext, useReducer, useContext, useEffect } from 'react';
 import { StudioState, StudioMediaItem } from '../types.ts';
 import * as db from '../services/dbService.ts';
@@ -36,8 +37,8 @@ const createInitialStudioState = (defaults: Partial<StudioState> = {}): StudioSt
 });
 
 const getInitialState = (): AppState => ({
-  left: createInitialStudioState({ title: 'Actors', prompt: 'Handsome Hausa actors in stylish modern clothing' }),
-  right: createInitialStudioState({ title: 'Actresses', prompt: 'Beautiful Hausa actresses in elegant modern clothing' }),
+  left: createInitialStudioState({ title: 'Bonanza Media', prompt: 'High quality cinematic media for Bonanza' }),
+  right: createInitialStudioState({ title: 'Bonanza Media', prompt: 'High quality cinematic media for Bonanza' }),
 });
 
 const appReducer = (state: AppState, action: Action): AppState => {
@@ -61,7 +62,12 @@ const appReducer = (state: AppState, action: Action): AppState => {
       
     case 'CLEAR_IMAGES': {
       const studioState = state[payload.studio];
-      studioState.images.forEach(img => URL.revokeObjectURL(img.url));
+      studioState.images.forEach(img => {
+        // Only revoke blob URLs, not YouTube IDs
+        if (img.source !== 'youtube') {
+            URL.revokeObjectURL(img.url);
+        }
+      });
       db.clearStudioImagesFromDB(payload.studio);
       return { ...state, [payload.studio]: { ...studioState, images: [] } };
     }
@@ -95,11 +101,20 @@ export const StudioProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             return {};
         };
         
+        const mapDbItemToStudioItem = (item: any): StudioMediaItem => {
+            // If it's a youtube item, its `url` field is already the videoId.
+            // If it's a file-based item, create a blob URL from the 'file' property.
+            if (item.type === 'youtube') {
+                return item as StudioMediaItem;
+            }
+            return { ...item, url: URL.createObjectURL(item.file) };
+        };
+
         const leftDbImages = await db.getItemsByStudio('left');
         const rightDbImages = await db.getItemsByStudio('right');
 
-        const leftImages = leftDbImages.map(img => ({ ...img, url: URL.createObjectURL(img.file) }));
-        const rightImages = rightDbImages.map(img => ({ ...img, url: URL.createObjectURL(img.file) }));
+        const leftImages = leftDbImages.map(mapDbItemToStudioItem);
+        const rightImages = rightDbImages.map(mapDbItemToStudioItem);
 
         dispatch({
             type: 'HYDRATE_STATE',

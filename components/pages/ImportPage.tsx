@@ -1,3 +1,5 @@
+
+
 import React from 'react';
 import ImageStudio from '../ImageStudio.tsx';
 import MoviePlayer from '../MoviePlayer.tsx';
@@ -21,6 +23,11 @@ interface ImportPageProps {
     onPauseRequest: () => void;
     onTimeUpdate: (time: number) => void;
     onDurationChange: (duration: number) => void;
+    // Studio Player props
+    isLeftStudioActive: boolean;
+    isRightStudioActive: boolean;
+    onStudioPlayRequest: (studio: 'left' | 'right') => void;
+    onStudioPauseRequest: (studio: 'left' | 'right') => void;
 }
 
 const ImportPage: React.FC<ImportPageProps> = (props) => {
@@ -38,7 +45,11 @@ const ImportPage: React.FC<ImportPageProps> = (props) => {
         onPlayRequest,
         onPauseRequest,
         onTimeUpdate,
-        onDurationChange
+        onDurationChange,
+        isLeftStudioActive,
+        isRightStudioActive,
+        onStudioPlayRequest,
+        onStudioPauseRequest,
     } = props;
 
     const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -67,7 +78,12 @@ const ImportPage: React.FC<ImportPageProps> = (props) => {
             <main className="flex-grow flex flex-col p-4 overflow-hidden">
                 <div className="flex-grow grid grid-cols-1 lg:grid-cols-[5fr_6fr_5fr] gap-4 overflow-hidden">
                     <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4 flex flex-col gap-4 overflow-hidden">
-                        <ImageStudio studio="left" />
+                        <ImageStudio
+                            studio="left"
+                            isStudioActive={isLeftStudioActive}
+                            onPlayRequest={() => onStudioPlayRequest('left')}
+                            onPauseRequest={() => onStudioPauseRequest('left')}
+                        />
                     </div>
                     
                     <div className="flex flex-col gap-4 overflow-hidden">
@@ -101,7 +117,12 @@ const ImportPage: React.FC<ImportPageProps> = (props) => {
                     </div>
                     
                     <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4 flex flex-col gap-4 overflow-hidden">
-                        <ImageStudio studio="right" />
+                        <ImageStudio
+                            studio="right"
+                            isStudioActive={isRightStudioActive}
+                            onPlayRequest={() => onStudioPlayRequest('right')}
+                            onPauseRequest={() => onStudioPauseRequest('right')}
+                        />
                     </div>
                 </div>
             </main>

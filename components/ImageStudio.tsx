@@ -1,5 +1,7 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useStudio } from '../contexts/StudioProvider.tsx';
 import { useSound } from '../hooks/useSound.tsx';
 import { generateImagesFromPrompt } from '../services/geminiService.ts';
@@ -13,6 +15,8 @@ import { PrevIcon } from './icons/PrevIcon.tsx';
 import { PaletteIcon } from './icons/PaletteIcon.tsx';
 import CreativeSparkLoader from './CreativeSparkLoader.tsx';
 import ColorPalette from './ColorPalette.tsx';
+import YouTubePlayer from './YouTubePlayer.tsx';
+import { YouTubeIcon } from './icons/YouTubeIcon.tsx';
 
 const GenerateIcon: React.FC = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -36,9 +40,12 @@ const artStyles = {
 
 interface ImageStudioProps {
   studio: 'left' | 'right';
+  isStudioActive: boolean;
+  onPlayRequest: () => void;
+  onPauseRequest: () => void;
 }
 
-const ImageStudio: React.FC<ImageStudioProps> = ({ studio }) => {
+const ImageStudio: React.FC<ImageStudioProps> = ({ studio, isStudioActive, onPlayRequest, onPauseRequest }) => {
     const { state, dispatch } = useStudio();
     const { playSound } = useSound();
     const studioState = state[studio];
@@ -46,85 +53,83 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ studio }) => {
     const isOtherStudioGenerating = (studio === 'left' ? state.right.isGenerating : state.left.isGenerating);
 
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [isPlaying, setIsPlaying] = useState(true);
     const [delay, setDelay] = useState(3000);
     const [isConfirmingClear, setIsConfirmingClear] = useState(false);
     const [isDraggingOver, setIsDraggingOver] = useState(false);
     const [activePalette, setActivePalette] = useState<{ imageId: string; colors: string[] } | null>(null);
     const [isExtractingPalette, setIsExtractingPalette] = useState(false);
-    const [activeVideoState, setActiveVideoState] = useState<'playing' | 'paused'>('paused');
+    const [youtubeShortsUrl, setYoutubeShortsUrl] = useState('');
 
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const videoRefs = useRef<{ [key: string]: HTMLVideoElement }>({});
-    const prevImagesLength = useRef(images.length);
+    const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({});
     const uniqueId = studio;
     const hasImages = images.length > 0;
     const currentItem = hasImages ? images[currentIndex] : null;
 
+    const onNextItem = useCallback(() => {
+        if (images.length > 1) {
+            setCurrentIndex(prev => (prev + 1) % images.length);
+        } else {
+            onPauseRequest();
+        }
+    }, [images.length, onPauseRequest]);
+
+    // Auto-advance for images
     useEffect(() => {
-        if (isPlaying && hasImages && currentItem?.type === 'image') {
-            const timer = setTimeout(() => {
-                setCurrentIndex(prev => (prev + 1) % images.length);
-            }, delay);
+        if (isStudioActive && hasImages && currentItem?.type === 'image') {
+            const timer = setTimeout(onNextItem, delay);
             return () => clearTimeout(timer);
         }
-    }, [isPlaying, hasImages, images, delay, currentIndex, currentItem]);
-
+    }, [isStudioActive, hasImages, currentItem, delay, onNextItem]);
+    
+    // Play/Pause control for local video elements
     useEffect(() => {
-        if (currentItem?.type === 'video' && isPlaying) {
-            setIsPlaying(false);
-        }
-    }, [currentItem, isPlaying]);
-
-
-    useEffect(() => {
-        const newLength = images.length;
-        const oldLength = prevImagesLength.current;
-
-        // Pause any videos that are no longer the current item
-        Object.entries(videoRefs.current).forEach(([id, videoEl]) => {
-            if (id !== currentItem?.id && videoEl && !videoEl.paused) {
-                videoEl.pause();
+        if (currentItem?.type === 'video') {
+            const videoEl = videoRefs.current[currentItem.id];
+            if (videoEl) {
+                if (isStudioActive && videoEl.paused) {
+                    videoEl.play().catch(e => console.error("Video playback failed", e));
+                } else if (!isStudioActive && !videoEl.paused) {
+                    videoEl.pause();
+                }
             }
-        });
-        
-        setActiveVideoState('paused');
-        setActivePalette(null);
+        }
+    }, [isStudioActive, currentItem]);
 
-        if ((newLength > oldLength) || (newLength > 0 && currentIndex >= newLength)) {
+    // General cleanup and index reset effect
+    useEffect(() => {
+        if (images.length > 0 && currentIndex >= images.length) {
             setCurrentIndex(0);
         }
-
-        setIsPlaying(currentIsPlaying => {
-            if (newLength > 0 && !currentIsPlaying) return true;
-            if (newLength === 0 && currentIsPlaying) return false;
-            return currentIsPlaying;
-        });
-        
-        prevImagesLength.current = newLength;
-    }, [images, currentIndex, currentItem]);
-
-    useEffect(() => {
+        if (images.length === 0 && isStudioActive) {
+            onPauseRequest();
+        }
+        setActivePalette(null);
+    }, [images, currentIndex, isStudioActive, onPauseRequest]);
+    
+     useEffect(() => {
       if(!isGenerating) {
         setIsConfirmingClear(false);
         setActivePalette(null);
       }
     }, [isGenerating]);
 
+    const extractYouTubeID = (url: string) => {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    }
+    
     const handlePlayPause = () => {
-        if (!currentItem) return;
-
-        if (currentItem.type === 'video') {
-            const videoEl = videoRefs.current[currentItem.id];
-            if (videoEl) {
-                if (videoEl.paused) videoEl.play().catch(e => console.error("Video playback failed", e));
-                else videoEl.pause();
-            }
+        if (!hasImages) return;
+        if (isStudioActive) {
+            onPauseRequest();
         } else {
-            hasImages && setIsPlaying(!isPlaying);
+            onPlayRequest();
         }
     };
-    const handleNext = () => images.length > 1 && setCurrentIndex(prev => (prev + 1) % images.length);
+    
+    const handleNext = () => hasImages && onNextItem();
     const handlePrev = () => images.length > 1 && setCurrentIndex(prev => (prev - 1 + images.length) % images.length);
     const handleDelayChange = (e: React.ChangeEvent<HTMLInputElement>) => setDelay(Math.max(500, Number(e.target.value) * 1000));
     const handleEditableKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
@@ -209,6 +214,37 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ studio }) => {
             e.dataTransfer.clearData();
         }
     };
+    
+    const handleImportYoutubeShort = async () => {
+        if (!youtubeShortsUrl) return;
+        const videoId = extractYouTubeID(youtubeShortsUrl);
+        if (!videoId) {
+            dispatch({ type: 'SET_ERROR', payload: { studio, error: 'Invalid YouTube URL.' } });
+            setTimeout(() => dispatch({ type: 'SET_ERROR', payload: { studio, error: null } }), 3000);
+            return;
+        }
+        playSound('drop');
+
+        const newMedia: StudioMediaItem = {
+            id: self.crypto.randomUUID(),
+            url: videoId,
+            source: 'youtube',
+            prompt: `YouTube Short: ${youtubeShortsUrl}`,
+            type: 'youtube',
+        };
+
+        await db.storeItem('images', { ...newMedia, file: null, url: newMedia.url });
+        dispatch({ type: 'ADD_IMAGES', payload: { studio, images: [newMedia] } });
+        setYoutubeShortsUrl('');
+    };
+
+    const handleYoutubeShortsKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleImportYoutubeShort();
+        }
+    };
+
 
     const handleGenerateClick = async () => {
         if (!prompt || isGenerating) return;
@@ -256,7 +292,7 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ studio }) => {
     const anyStudioBusy = isGenerating || isOtherStudioGenerating;
     const progressPercentage = hasImages ? ((currentIndex + 1) / images.length) * 100 : 0;
     const loaderText = 'Generating...';
-    const isCurrentlyPlaying = (currentItem?.type === 'image' && isPlaying) || (currentItem?.type === 'video' && activeVideoState === 'playing');
+    const isCurrentlyPlaying = isStudioActive && hasImages;
 
     return (
         <div 
@@ -279,16 +315,20 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ studio }) => {
                                <div className="relative w-full h-full group">
                                     {item.type === 'video' ? (
                                         <video
-                                            ref={(el) => { if (el) videoRefs.current[item.id] = el; }}
+                                            ref={(el) => { videoRefs.current[item.id] = el; }}
                                             src={item.url}
                                             className="w-full h-full object-contain bg-black cursor-pointer"
                                             onClick={handlePlayPause}
-                                            onPlay={() => {
-                                                if (isPlaying) setIsPlaying(false);
-                                                setActiveVideoState('playing');
-                                            }}
-                                            onPause={() => setActiveVideoState('paused')}
-                                            onEnded={() => setActiveVideoState('paused')}
+                                            onEnded={onNextItem}
+                                            playsInline
+                                        />
+                                    ) : item.type === 'youtube' ? (
+                                        <YouTubePlayer
+                                            videoId={item.url}
+                                            isPlaying={isStudioActive && index === currentIndex}
+                                            onPlayerPlay={onPlayRequest}
+                                            onPlayerPause={onPauseRequest}
+                                            onEnded={onNextItem}
                                         />
                                     ) : (
                                         <img src={item.url} alt={item.prompt || `Media ${index + 1}`} className={`w-full h-full object-cover ${slideshowTransition === 'pan' ? 'transition-pan' : ''}`} />
@@ -338,7 +378,27 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ studio }) => {
                 <div className="w-full shrink-0 p-3 flex flex-col gap-2 bg-gray-900/70 rounded-b-lg border-t-2 border-gray-700">
                     <textarea id={`prompt-${uniqueId}`} value={prompt} onChange={(e) => dispatch({type: 'SET_VALUE', payload: {studio, key: 'prompt', value: e.target.value}})} disabled={anyStudioBusy} placeholder="Describe the images to generate..." className="w-full p-2 bg-gray-800 border border-gray-600 rounded-lg text-gray-200 focus:ring-1 focus:ring-purple-500 focus:border-purple-500 transition-all resize-none disabled:bg-gray-700 disabled:text-gray-500 text-center" rows={2}/>
                     
-                    <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                        <YouTubeIcon className="h-6 w-6 shrink-0 text-red-500" />
+                        <input
+                            type="url"
+                            placeholder="Paste YouTube Shorts URL..."
+                            className="w-full text-xs p-1.5 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-1 focus:ring-purple-500 disabled:bg-gray-700"
+                            value={youtubeShortsUrl}
+                            onChange={e => setYoutubeShortsUrl(e.target.value)}
+                            onKeyDown={handleYoutubeShortsKeyDown}
+                            disabled={anyStudioBusy}
+                        />
+                        <button
+                            onClick={handleImportYoutubeShort}
+                            className="text-xs bg-red-600 text-white font-bold p-1.5 px-2 rounded-md hover:bg-red-700 disabled:opacity-50"
+                            disabled={anyStudioBusy || !youtubeShortsUrl.trim()}
+                        >
+                            Add
+                        </button>
+                    </div>
+
+                    <div className="flex flex-col gap-3 mt-2">
                         <div>
                              <label htmlFor={`artStyle-${uniqueId}`} className="text-xs text-gray-400 mb-1 block">Art Style</label>
                              <select id={`artStyle-${uniqueId}`} value={artStyle} onChange={e => dispatch({type: 'SET_VALUE', payload: {studio, key: 'artStyle', value: e.target.value}})} disabled={anyStudioBusy} className="w-full text-xs p-1.5 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-1 focus:ring-purple-500">

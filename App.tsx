@@ -1,6 +1,5 @@
 
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import WelcomeScreen from './components/WelcomeScreen.tsx';
 import GoodbyeScreen from './components/GoodbyeScreen.tsx';
 import StudioPage from './components/pages/StudioPage.tsx';
@@ -9,15 +8,14 @@ import { useSound } from './hooks/useSound.tsx';
 import { SoundOnIcon } from './components/icons/SoundOnIcon.tsx';
 import { SoundOffIcon } from './components/icons/SoundOffIcon.tsx';
 import AmbientPlayer from './components/AmbientPlayer.tsx';
-import { MediaAsset } from './types.ts';
+import { MediaAsset, PlayerId } from './types.ts';
 import AudioMessagePlayer from './components/AudioMessagePlayer.tsx';
 import { CloseIcon } from './components/icons/CloseIcon.tsx';
 import * as db from './services/dbService.ts';
 import ScreenRecorder from './components/ScreenRecorder.tsx';
+import { PlayIcon } from './components/icons/PlayIcon.tsx';
+import { PauseIcon } from './components/icons/PauseIcon.tsx';
 
-type PlayerId = 'movie' |
-  'audio-left-1' | 'audio-left-2' | 'audio-left-3' | 'audio-left-4' |
-  'audio-right-1' | 'audio-right-2' | 'audio-right-3' | 'audio-right-4';
 type AppView = 'welcome' | 'studio' | 'goodbye';
 type MovieSource = { type: 'local'; assetId: string } | { type: 'youtube'; url: string; };
 
@@ -34,7 +32,7 @@ const App: React.FC = () => {
 
   // General App State
   const [mainTitle, setMainTitle] = useState("Kannywood HTV");
-  const [subTitle, setSubTitle] = useState("Welcome! If you enjoy the show, remember to like and subscribe!");
+  const [subTitle, setSubTitle] = useState("Barka da zuwa! Idan kuna jin daɗin shirin, ku danna alamar so (like) sannan kuyi subscribing.");
   const [bookTitle, setBookTitle] = useState("The Daily Feature");
   
   // Media State
@@ -43,7 +41,7 @@ const App: React.FC = () => {
   
   const activeMediaAsset = mediaAssets.find(asset => asset.id === activeAssetId) || null;
 
-  // Player Sync State
+  // --- Centralized Player State ---
   const movieRef = useRef<{ seekTo: (time: number) => void }>(null);
   const audioRefs: Record<string, React.RefObject<HTMLAudioElement>> = {
     'audio-left-1': useRef<HTMLAudioElement>(null),
@@ -55,8 +53,8 @@ const App: React.FC = () => {
     'audio-right-3': useRef<HTMLAudioElement>(null),
     'audio-right-4': useRef<HTMLAudioElement>(null),
   };
-  const [activePlayer, setActivePlayer] = useState<PlayerId | null>(null);
-  const [playerToResume, setPlayerToResume] = useState<'movie' | null>(null);
+  const [activePlayers, setActivePlayers] = useState<Set<PlayerId>>(new Set());
+  const [playersToResume, setPlayersToResume] = useState<Set<PlayerId>>(new Set());
   
   const mediaAssetsRef = useRef<MediaAsset[]>([]);
   mediaAssetsRef.current = mediaAssets;
@@ -156,48 +154,94 @@ const App: React.FC = () => {
     }
   };
 
-  const handlePlay = (id: PlayerId) => {
-    if (id.startsWith('audio-') && movieRef.current && activePlayer === 'movie') {
-        setPlayerToResume('movie');
-    }
-    setActivePlayer(id);
-  };
-  const handlePause = (id: PlayerId) => {
-    if (activePlayer !== id) return;
+  // --- Centralized Playback Handlers ---
+  const handlePlay = useCallback((id: PlayerId) => {
     if (id.startsWith('audio-')) {
-        if (playerToResume === 'movie') {
-            setActivePlayer('movie');
-            setPlayerToResume(null);
-        } else {
-            setActivePlayer(null);
-        }
-    } else {
-        setActivePlayer(null);
-    }
-  };
-  const handleAudioEnded = () => {
-    if (playerToResume === 'movie') {
-        setActivePlayer('movie');
-    } else {
-        setActivePlayer(null);
-    }
-    setPlayerToResume(null);
-  };
+        const videoPlayerIds: PlayerId[] = ['movie', 'studio-left', 'studio-right'];
+        
+        setActivePlayers(currentPlayers => {
+            const currentlyPlayingVideos = new Set([...currentPlayers].filter(p => videoPlayerIds.includes(p)));
+            
+            if (currentlyPlayingVideos.size > 0) {
+                setPlayersToResume(currentlyPlayingVideos);
+            } else {
+                setPlayersToResume(new Set());
+            }
 
+            const next = new Set(currentPlayers);
+            currentlyPlayingVideos.forEach(p => next.delete(p));
+            next.add(id);
+            return next;
+        });
+    } else {
+        setActivePlayers(prev => {
+            const next = new Set(prev);
+            next.add(id);
+            return next;
+        });
+    }
+  }, []);
+
+  const handlePause = useCallback((id: PlayerId) => {
+      if (id.startsWith('audio-')) {
+          setPlayersToResume(currentPlayersToResume => {
+              setActivePlayers(prevActive => {
+                  const next = new Set(prevActive);
+                  next.delete(id);
+                  currentPlayersToResume.forEach(p => next.add(p));
+                  return next;
+              });
+              return new Set();
+          });
+      } else {
+          setActivePlayers(prev => {
+              const next = new Set(prev);
+              next.delete(id);
+              return next;
+          });
+      }
+  }, []);
+  
+  const handleAudioEnded = useCallback((id: PlayerId) => {
+    handlePause(id);
+  }, [handlePause]);
+
+  const handleTogglePlayAll = useCallback(() => {
+      const videoPlayers: PlayerId[] = ['movie', 'studio-left', 'studio-right'];
+      
+      setActivePlayers(prev => {
+          const areAllPlaying = videoPlayers.every(p => prev.has(p));
+          const next = new Set(prev);
+          if (areAllPlaying) {
+              videoPlayers.forEach(p => next.delete(p));
+          } else {
+              videoPlayers.forEach(p => next.add(p));
+          }
+          return next;
+      });
+  }, []);
+  
+  // Effect to control the audio elements based on activePlayers
   useEffect(() => {
     for (const [id, ref] of Object.entries(audioRefs)) {
         const player = ref.current;
         if (player) {
-            if (id === activePlayer) {
+            if (activePlayers.has(id as PlayerId)) {
                 player.play().catch(e => console.error(`Playback failed for ${id}:`, e));
             } else {
                 player.pause();
             }
         }
     }
-  }, [activePlayer]);
+  }, [activePlayers]);
   
   const handleEditableKeyDown = (e: React.KeyboardEvent<HTMLElement>) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLElement).blur(); } };
+  
+  // --- Memoized callbacks for StudioPage ---
+  const handleMoviePlayRequest = useCallback(() => handlePlay('movie'), [handlePlay]);
+  const handleMoviePauseRequest = useCallback(() => handlePause('movie'), [handlePause]);
+  const handleStudioPlayRequest = useCallback((studio: 'left' | 'right') => handlePlay(studio === 'left' ? 'studio-left' : 'studio-right'), [handlePlay]);
+  const handleStudioPauseRequest = useCallback((studio: 'left' | 'right') => handlePause(studio === 'left' ? 'studio-left' : 'studio-right'), [handlePause]);
   
   const renderView = () => {
     switch(currentView) {
@@ -221,9 +265,13 @@ const App: React.FC = () => {
               youtubeUrlInput={youtubeUrlInput}
               onYoutubeUrlInputChange={setYoutubeUrlInput}
               onYoutubeUrlSubmit={handleYoutubeUrlSubmit}
-              isPlaying={activePlayer === 'movie'}
-              onPlayRequest={() => handlePlay('movie')}
-              onPauseRequest={() => handlePause('movie')}
+              isMoviePlayerActive={activePlayers.has('movie')}
+              onMoviePlayRequest={handleMoviePlayRequest}
+              onMoviePauseRequest={handleMoviePauseRequest}
+              isLeftStudioActive={activePlayers.has('studio-left')}
+              isRightStudioActive={activePlayers.has('studio-right')}
+              onStudioPlayRequest={handleStudioPlayRequest}
+              onStudioPauseRequest={handleStudioPauseRequest}
             />
           </StudioProvider>
         );
@@ -234,6 +282,10 @@ const App: React.FC = () => {
   }
 
   const isStudio = currentView === 'studio';
+  const areAllVideosPlaying =
+    activePlayers.has('movie') &&
+    activePlayers.has('studio-left') &&
+    activePlayers.has('studio-right');
 
   return (
     <div className="bg-gray-900 text-white h-screen flex flex-col antialiased overflow-hidden living-background">
@@ -249,10 +301,10 @@ const App: React.FC = () => {
                         ref={audioRefs[id]}
                         id={`audio-import-left-${i}`}
                         title={`Left Audio ${i}`}
-                        isPlaying={activePlayer === id}
+                        isPlaying={activePlayers.has(id)}
                         onPlayRequest={() => handlePlay(id)}
                         onPauseRequest={() => handlePause(id)}
-                        onEnded={handleAudioEnded}
+                        onEnded={() => handleAudioEnded(id)}
                     />
                 );
             })}
@@ -272,10 +324,10 @@ const App: React.FC = () => {
                         ref={audioRefs[id]}
                         id={`audio-import-right-${i}`}
                         title={`Right Audio ${i}`}
-                        isPlaying={activePlayer === id}
+                        isPlaying={activePlayers.has(id)}
                         onPlayRequest={() => handlePlay(id)}
                         onPauseRequest={() => handlePause(id)}
-                        onEnded={handleAudioEnded}
+                        onEnded={() => handleAudioEnded(id)}
                    />
                 );
             })}
@@ -292,8 +344,14 @@ const App: React.FC = () => {
       </div>
 
       <footer className="flex items-center justify-between py-2 px-4 border-t border-gray-700/50 text-gray-500 text-xs shrink-0 bg-gray-900/30 backdrop-blur-sm main-footer">
-        <p>© 2024 Kannywood HTV. All Rights Reserved.</p>
+        <p>© 2025 Kannywood HTV. All Rights Reserved.</p>
         <div className="flex items-center gap-4">
+            {isStudio && (
+                 <button onClick={handleTogglePlayAll} className="footer-control-button flex items-center gap-2 px-3 !text-sm" aria-label={areAllVideosPlaying ? 'Pause all players' : 'Play all players'}>
+                    {areAllVideosPlaying ? <PauseIcon className="h-5 w-5" /> : <PlayIcon className="h-5 w-5" />}
+                    <span className="font-semibold">{areAllVideosPlaying ? 'Pause All' : 'Play All'}</span>
+                </button>
+            )}
             <AmbientPlayer />
             <button onClick={toggleMute} className="footer-control-button" aria-label={isMuted ? 'Unmute sounds' : 'Mute sounds'}>{isMuted ? <SoundOffIcon /> : <SoundOnIcon />}</button>
         </div>

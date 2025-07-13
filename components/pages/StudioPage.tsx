@@ -1,11 +1,10 @@
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import ImageStudio from '../ImageStudio.tsx';
 import MoviePlayer from '../MoviePlayer.tsx';
 import { MediaAsset } from '../../types.ts';
 
 type MovieSource = { type: 'local'; assetId: string; } | { type: 'youtube'; url: string; } | null;
-
 
 interface StudioPageProps {
     // Media props
@@ -13,15 +12,20 @@ interface StudioPageProps {
     onAddMediaAssets: (files: FileList) => void;
     activeMediaAsset: MediaAsset | null;
     onSelectAsset: (assetId: string) => void;
-    // Player props
+    // Movie Player props
     movieRef: React.RefObject<{ seekTo: (time: number) => void; }>;
     movieSource: MovieSource;
     youtubeUrlInput: string;
     onYoutubeUrlInputChange: (value: string) => void;
     onYoutubeUrlSubmit: (e: React.FormEvent) => void;
-    isPlaying: boolean;
-    onPlayRequest: () => void;
-    onPauseRequest: () => void;
+    isMoviePlayerActive: boolean;
+    onMoviePlayRequest: () => void;
+    onMoviePauseRequest: () => void;
+    // Studio Player props
+    isLeftStudioActive: boolean;
+    isRightStudioActive: boolean;
+    onStudioPlayRequest: (studio: 'left' | 'right') => void;
+    onStudioPauseRequest: (studio: 'left' | 'right') => void;
 }
 
 const StudioPage: React.FC<StudioPageProps> = (props) => {
@@ -35,10 +39,20 @@ const StudioPage: React.FC<StudioPageProps> = (props) => {
         youtubeUrlInput,
         onYoutubeUrlInputChange,
         onYoutubeUrlSubmit,
-        isPlaying,
-        onPlayRequest,
-        onPauseRequest,
+        isMoviePlayerActive,
+        onMoviePlayRequest,
+        onMoviePauseRequest,
+        isLeftStudioActive,
+        isRightStudioActive,
+        onStudioPlayRequest,
+        onStudioPauseRequest
     } = props;
+
+    // Create stable callbacks for each studio
+    const handleLeftPlayRequest = useCallback(() => onStudioPlayRequest('left'), [onStudioPlayRequest]);
+    const handleLeftPauseRequest = useCallback(() => onStudioPauseRequest('left'), [onStudioPauseRequest]);
+    const handleRightPlayRequest = useCallback(() => onStudioPlayRequest('right'), [onStudioPlayRequest]);
+    const handleRightPauseRequest = useCallback(() => onStudioPauseRequest('right'), [onStudioPauseRequest]);
 
     return (
         <div className="relative w-full h-full flex flex-col">
@@ -46,7 +60,12 @@ const StudioPage: React.FC<StudioPageProps> = (props) => {
                  <div className="flex-grow grid grid-cols-1 lg:grid-cols-[3fr_8fr_3fr] gap-4 overflow-hidden">
                     {/* Left Panel */}
                     <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4 flex flex-col gap-4 overflow-hidden">
-                        <ImageStudio studio="left" />
+                        <ImageStudio 
+                            studio="left"
+                            isStudioActive={isLeftStudioActive}
+                            onPlayRequest={handleLeftPlayRequest}
+                            onPauseRequest={handleLeftPauseRequest}
+                        />
                     </div>
                     
                     {/* Center Panel */}
@@ -59,9 +78,9 @@ const StudioPage: React.FC<StudioPageProps> = (props) => {
                               youtubeUrlInput={youtubeUrlInput} 
                               onYoutubeUrlInputChange={onYoutubeUrlInputChange} 
                               onYoutubeUrlSubmit={onYoutubeUrlSubmit}
-                              isPlaying={isPlaying} 
-                              onPlayRequest={onPlayRequest} 
-                              onPauseRequest={onPauseRequest}
+                              isPlaying={isMoviePlayerActive} 
+                              onPlayRequest={onMoviePlayRequest} 
+                              onPauseRequest={onMoviePauseRequest}
                               onAddMediaAssets={onAddMediaAssets}
                             />
                         </div>
@@ -69,7 +88,12 @@ const StudioPage: React.FC<StudioPageProps> = (props) => {
                     
                     {/* Right Panel */}
                     <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4 flex flex-col gap-4 overflow-hidden">
-                        <ImageStudio studio="right" />
+                        <ImageStudio
+                           studio="right"
+                           isStudioActive={isRightStudioActive}
+                           onPlayRequest={handleRightPlayRequest}
+                           onPauseRequest={handleRightPauseRequest}
+                        />
                     </div>
                 </div>
             </main>

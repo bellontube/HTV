@@ -12,7 +12,7 @@ const ScreenRecorder = forwardRef((props, ref) => {
     const mediaStreamRef = useRef<MediaStream | null>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
     const recordedChunksRef = useRef<Blob[]>([]);
-    const countdownTimerRef = useRef<number | null>(null);
+    const countdownTimerRef = useRef<any>(null);
 
     useImperativeHandle(ref, () => ({
         start: (includeMic: boolean) => {

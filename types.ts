@@ -1,6 +1,5 @@
 
 
-
 export interface Scene {
   sceneNumber: number;
   text: string;
@@ -16,10 +15,10 @@ export interface Story {
 
 export interface StudioMediaItem {
   id: string;      // Unique ID for React keys
-  type: 'image' | 'video';
-  url:string;     // Base64 data URL or blob URL
+  type: 'image' | 'video' | 'youtube';
+  url:string;     // Base64 data URL, blob URL, or YouTube Video ID
   prompt?: string; // The prompt used for generation (if AI)
-  source: 'ai' | 'local';
+  source: 'ai' | 'local' | 'youtube';
   duration?: number; // duration in seconds for videos
 }
 
@@ -43,9 +42,22 @@ export interface MediaAsset {
 }
 
 export interface TimelineClip {
-  id: string;
+  id:string;
   assetId: string;
   assetName: string;
   startTime: number;
   endTime: number;
 }
+
+export type PlayerId =
+  | 'movie'
+  | 'studio-left'
+  | 'studio-right'
+  | 'audio-left-1'
+  | 'audio-left-2'
+  | 'audio-left-3'
+  | 'audio-left-4'
+  | 'audio-right-1'
+  | 'audio-right-2'
+  | 'audio-right-3'
+  | 'audio-right-4';

@@ -1,4 +1,6 @@
 
+
+
 import React, { useEffect, useRef } from 'react';
 
 declare global {
@@ -13,9 +15,10 @@ interface YouTubePlayerProps {
     isPlaying: boolean;
     onPlayerPlay: () => void;
     onPlayerPause: () => void;
+    onEnded?: () => void;
 }
 
-const YouTubePlayer: React.FC<YouTubePlayerProps> = ({ videoId, isPlaying, onPlayerPlay, onPlayerPause }) => {
+const YouTubePlayer: React.FC<YouTubePlayerProps> = ({ videoId, isPlaying, onPlayerPlay, onPlayerPause, onEnded }) => {
     const playerRef = useRef<any>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -23,6 +26,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({ videoId, isPlaying, onPla
         const createPlayer = () => {
             if (containerRef.current && !playerRef.current) {
                 playerRef.current = new window.YT.Player(containerRef.current, {
+                    host: 'https://www.youtube-nocookie.com',
                     videoId: videoId,
                     playerVars: {
                         autoplay: 0,
@@ -30,6 +34,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({ videoId, isPlaying, onPla
                         rel: 0,
                         showinfo: 0,
                         modestbranding: 1,
+                        iv_load_policy: 3,
                     },
                     events: {
                         'onStateChange': onPlayerStateChange
@@ -39,12 +44,15 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({ videoId, isPlaying, onPla
         };
 
         const onPlayerStateChange = (event: any) => {
+            // YT.PlayerState.ENDED === 0
             // YT.PlayerState.PLAYING === 1
             // YT.PlayerState.PAUSED === 2
             if (event.data === 1) { 
                 onPlayerPlay();
             } else if (event.data === 2) {
                 onPlayerPause();
+            } else if (event.data === 0) {
+                onEnded?.();
             }
         };
 
@@ -60,13 +68,14 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({ videoId, isPlaying, onPla
                 playerRef.current = null;
             }
         };
-    }, [videoId, onPlayerPlay, onPlayerPause]);
+    }, [videoId, onPlayerPlay, onPlayerPause, onEnded]);
 
     useEffect(() => {
-        if (playerRef.current && playerRef.current.getPlayerState) {
-            if (isPlaying && playerRef.current.getPlayerState() !== 1) {
+        if (playerRef.current && typeof playerRef.current.getPlayerState === 'function') {
+            const playerState = playerRef.current.getPlayerState();
+            if (isPlaying && playerState !== 1 && playerState !== 3) { // 1=playing, 3=buffering
                 playerRef.current.playVideo();
-            } else if (!isPlaying && playerRef.current.getPlayerState() === 1) {
+            } else if (!isPlaying && playerState === 1) {
                 playerRef.current.pauseVideo();
             }
         }
@@ -75,4 +84,4 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({ videoId, isPlaying, onPla
     return <div ref={containerRef} className="w-full h-full" />;
 };
 
-export default YouTubePlayer;
+export default React.memo(YouTubePlayer);
