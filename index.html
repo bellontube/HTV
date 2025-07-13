@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-g" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kannywood HTV - Video Repurposing Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Lora:wght@400;600&display=swap" rel="stylesheet">
+    <!-- YouTube IFrame Player API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <!-- FFmpeg for in-browser video processing -->
+    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.min.js"></script>
+    <style>
+      html, body {
+        height: 100vh;
+        overflow: hidden;
+      }
+      body {
+        font-family: 'Noto Sans', sans-serif;
+      }
+      .font-lora {
+        font-family: 'Lora', serif;
+      }
+      .editable-book-title:hover {
+        background-color: rgba(255,255,255,0.05);
+        box-shadow: 0 0 10px rgba(216, 180, 254, 0.3);
+      }
+
+      /* --- Living Background --- */
+      @keyframes gradient-move {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      .living-background {
+        background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1c1c3c);
+        background-size: 400% 400%;
+        animation: gradient-move 30s ease infinite;
+      }
+      
+      /* --- Drag & Drop Feedback --- */
+      .drag-over-active {
+        outline: 2px dashed #a78bfa; /* purple-400 */
+        outline-offset: -8px;
+        background-color: rgba(167, 139, 250, 0.1);
+      }
+      
+      .timeline-drag-over {
+        background-color: rgba(167, 139, 250, 0.2);
+        outline: 2px dashed #a78bfa;
+      }
+
+      /* --- Book Styles --- */
+      .book-container {
+        transform-style: preserve-3d;
+        transition: transform 0.5s ease-in-out;
+      }
+      .book-container:hover {
+        transform: scale(1.05) rotateY(-20deg) rotateX(10deg) !important;
+      }
+      .book-cover {
+        background: linear-gradient(145deg, #3a2d58, #2c2141);
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 5px 5px 20px rgba(0,0,0,0.4);
+        transform: translateZ(2px);
+      }
+      .book-cover::before {
+        content: '';
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        right: 15px;
+        bottom: 15px;
+        border: 2px solid rgba(192, 132, 252, 0.2);
+        box-shadow: 0 0 5px rgba(192, 132, 252, 0.1);
+        border-radius: 2px;
+      }
+
+      /* --- Animations --- */
+      @keyframes fade-in {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .fade-in { animation: fade-in 0.5s ease-out forwards; }
+      
+      @keyframes book-fly-out {
+        0% { transform: scale(1.05) rotateY(-20deg) rotateX(10deg) translateZ(0); opacity: 1; }
+        100% { transform: scale(2.5) rotateY(-10deg) rotateX(5deg) translateZ(500px); opacity: 0; }
+      }
+      .book-exit-to-studio { animation: book-fly-out 0.8s ease-in forwards; }
+
+      @keyframes book-fly-in-and-close {
+        0% { transform: scale(2.5) rotateY(-10deg) rotateX(5deg) translateZ(500px); opacity: 0; }
+        100% { transform: rotateY(-28deg) rotateX(8deg) translateZ(0); opacity: 1; }
+      }
+      .book-enter-from-studio { animation: book-fly-in-and-close 1s ease-out forwards; }
+      
+      .exit-studio-button {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        z-index: 50;
+        transition: all 0.2s ease-in-out;
+      }
+      .exit-studio-button:hover { transform: scale(1.2); color: #f87171; /* red-400 */ }
+      
+      /* --- Slideshow Transitions --- */
+      @keyframes ken-burns-gentle {
+        0% { transform: scale(1); }
+        100% { transform: scale(1.1); }
+      }
+      .transition-pan {
+        animation: ken-burns-gentle 15s ease-in-out alternate infinite;
+      }
+      
+      /* --- Creative Sparks Loader --- */
+      @keyframes sparkle {
+        0%, 100% { transform: scale(0); opacity: 0.5; }
+        50% { transform: scale(1); opacity: 1; }
+      }
+      .spark {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background: #e9d5ff; /* purple-200 */
+        border-radius: 50%;
+        box-shadow: 0 0 5px #c084fc, 0 0 10px #c084fc, 0 0 15px #c084fc;
+        animation: sparkle 1.5s infinite;
+      }
+      
+      /* --- Color Palette --- */
+      .palette-icon {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        z-index: 10;
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+        transform: scale(0.9);
+      }
+      .group:hover .palette-icon {
+        opacity: 1;
+        transform: scale(1);
+      }
+      
+      /* --- Footer & Modal Controls --- */
+      .footer-control-button, .tool-button {
+        background-color: transparent;
+        border: 1px solid rgba(129, 140, 248, 0.3); /* indigo-300/30 */
+        color: #a5b4fc; /* indigo-300 */
+        border-radius: 0.5rem;
+        padding: 8px 16px;
+        transition: all 0.2s ease-in-out;
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .footer-control-button:hover, .tool-button:hover {
+        background-color: rgba(129, 140, 248, 0.1);
+        border-color: rgba(129, 140, 248, 0.5);
+        transform: scale(1.05);
+      }
+      .footer-control-button {
+         border-radius: 9999px;
+         padding: 6px;
+      }
+      /* --- Exporter Watermark Preview --- */
+      .watermark-position-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 0.5rem;
+      }
+      
+      /* --- Video Editor Panel --- */
+      .video-editor-panel {
+        background-color: rgba(16, 20, 32, 0.85);
+        backdrop-filter: blur(10px);
+        border-top: 1px solid rgba(129, 140, 248, 0.2);
+        box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
+      }
+      .timeline-item.active {
+        outline: 2px solid #a78bfa; /* purple-400 */
+        box-shadow: 0 0 15px rgba(167, 139, 250, 0.4);
+      }
+       .timeline-item.dragging {
+        opacity: 0.5;
+        transform: scale(1.05);
+      }
+
+      /* --- App Header/Footer Transitions --- */
+      .main-header, .main-footer {
+        transition: max-height 0.4s ease-out, opacity 0.3s ease-out, padding 0.4s ease-out, border-width 0.4s ease-out;
+        max-height: 200px; /* Ample space for content */
+        overflow: hidden;
+      }
+      .main-header.hidden, .main-footer.hidden {
+        max-height: 0;
+        opacity: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        border-width: 0;
+      }
+
+      /* --- Record Button --- */
+       .record-dot-button {
+        background: transparent;
+        border: none;
+        padding: 4px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s;
+      }
+      .record-dot-button:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+      .record-dot {
+          width: 18px;
+          height: 18px;
+          background-color: #ef4444; /* red-500 */
+          border-radius: 50%;
+          animation: pulse-record 2s infinite ease-in-out;
+      }
+
+      @keyframes pulse-record {
+          0% {
+              transform: scale(0.95);
+              box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+          }
+          70% {
+              transform: scale(1);
+              box-shadow: 0 0 0 5px rgba(239, 68, 68, 0);
+          }
+          100% {
+              transform: scale(0.95);
+              box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+          }
+      }
+      
+      .record-dot.paused {
+        animation-play-state: paused;
+        background-color: #f87171; /* red-400 */
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.9.0",
+    "idb": "https://esm.sh/idb@8.0.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

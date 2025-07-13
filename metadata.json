@@ -1,0 +1,10 @@
+{
+  "requestFramePermissions": [
+    "microphone",
+    "camera",
+    "display-capture"
+  ],
+  "name": "Kannywood HTV - Duniyar Finafinan Hausa",
+  "description": "",
+  "prompt": ""
+}
