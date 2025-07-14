@@ -1,10 +1,10 @@
 
+
 import { openDB } from 'idb';
 
 const DB_NAME = 'KannywoodStudioDB';
 const DB_VERSION = 4; // Version bumped for new key
 const IMAGE_STORE = 'images';
-const VIDEO_STORE = 'videos';
 const APP_SETTINGS_STORE = 'app_settings';
 const AUDIO_MESSAGES_STORE = 'audio_messages';
 
@@ -14,8 +14,8 @@ const dbPromise = openDB(DB_NAME, DB_VERSION, {
             const imageStore = db.createObjectStore(IMAGE_STORE, { keyPath: 'id' });
             imageStore.createIndex('studio', 'studio', { unique: false });
         }
-        if (!db.objectStoreNames.contains(VIDEO_STORE)) {
-            db.createObjectStore(VIDEO_STORE, { keyPath: 'id' });
+        if (db.objectStoreNames.contains('videos')) {
+            db.deleteObjectStore('videos');
         }
         if (!db.objectStoreNames.contains(APP_SETTINGS_STORE)) {
             db.createObjectStore(APP_SETTINGS_STORE, { keyPath: 'key' });
@@ -58,12 +58,12 @@ export const setSetting = async (key: string, value: any): Promise<void> => {
 };
 
 // --- Generic Functions ---
-export const storeItem = async (storeName: 'images' | 'videos' | 'audio_messages', item: any): Promise<any> => {
+export const storeItem = async (storeName: 'images' | 'audio_messages', item: any): Promise<any> => {
     const db = await dbPromise;
     return db.put(storeName, item);
 };
 
-export const getAllItems = async (storeName: 'images' | 'videos' | 'audio_messages'): Promise<any[]> => {
+export const getAllItems = async (storeName: 'images' | 'audio_messages'): Promise<any[]> => {
     const db = await dbPromise;
     return db.getAll(storeName);
 };
@@ -73,7 +73,7 @@ export const getItemsByStudio = async (studio: 'left' | 'right'): Promise<any[]>
     return db.getAllFromIndex(IMAGE_STORE, 'studio', studio);
 };
 
-export const deleteItem = async (storeName: 'images' | 'videos' | 'audio_messages', id: string): Promise<void> => {
+export const deleteItem = async (storeName: 'images' | 'audio_messages', id: string): Promise<void> => {
     const db = await dbPromise;
     return db.delete(storeName, id);
 };

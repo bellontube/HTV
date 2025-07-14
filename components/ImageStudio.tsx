@@ -18,6 +18,8 @@ import CreativeSparkLoader from './CreativeSparkLoader.tsx';
 import ColorPalette from './ColorPalette.tsx';
 import YouTubePlayer from './YouTubePlayer.tsx';
 import { YouTubeIcon } from './icons/YouTubeIcon.tsx';
+import { SoundOnIcon } from './icons/SoundOnIcon.tsx';
+import { SoundOffIcon } from './icons/SoundOffIcon.tsx';
 
 const GenerateIcon: React.FC = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -50,7 +52,7 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ studio, isStudioActive, onPla
     const { state, dispatch } = useStudio();
     const { playSound } = useSound();
     const studioState = state[studio];
-    const { title, prompt, images, imageCount, artStyle, slideshowTransition, isGenerating, error } = studioState;
+    const { title, prompt, images, imageCount, artStyle, slideshowTransition, isGenerating, error, isMuted } = studioState;
     const isOtherStudioGenerating = (studio === 'left' ? state.right.isGenerating : state.left.isGenerating);
 
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -137,6 +139,11 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ studio, isStudioActive, onPla
         if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLElement).blur(); }
     };
     
+    const handleMuteToggle = () => {
+        playSound('click');
+        dispatch({ type: 'SET_VALUE', payload: { studio, key: 'isMuted', value: !isMuted } });
+    };
+
     const handlePaletteClick = async (e: React.MouseEvent, imageId: string, imageUrl: string) => {
         e.stopPropagation();
         if (activePalette?.imageId === imageId) {
@@ -322,6 +329,7 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ studio, isStudioActive, onPla
                                             onClick={handlePlayPause}
                                             onEnded={onNextItem}
                                             playsInline
+                                            muted={isMuted}
                                         />
                                     ) : item.type === 'youtube' ? (
                                         <YouTubePlayer
@@ -330,6 +338,7 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ studio, isStudioActive, onPla
                                             onPlayerPlay={onPlayRequest}
                                             onPlayerPause={onPauseRequest}
                                             onEnded={onNextItem}
+                                            isMuted={isMuted}
                                         />
                                     ) : (
                                         <img src={item.url} alt={item.prompt || `Media ${index + 1}`} className={`w-full h-full object-cover ${slideshowTransition === 'pan' ? 'transition-pan' : ''}`} />
@@ -352,6 +361,11 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ studio, isStudioActive, onPla
                                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                <p className="text-sm">{isDraggingOver ? 'Drop files to import' : 'Use the controls below to begin.'}</p>
                             </div>
+                        )}
+                        {hasImages && (
+                            <button onClick={handleMuteToggle} className="absolute top-2 right-2 z-10 p-1.5 bg-black/50 rounded-full text-white hover:bg-black/80 hover:text-[var(--color-accent-text)] transition-all" aria-label={isMuted ? 'Unmute' : 'Mute'}>
+                                {isMuted ? <SoundOffIcon /> : <SoundOnIcon />}
+                            </button>
                         )}
                         {isGenerating && <CreativeSparkLoader text={loaderText} />}
                         {isExtractingPalette && <CreativeSparkLoader text="Extracting colors..." />}

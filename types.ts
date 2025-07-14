@@ -1,19 +1,4 @@
 
-
-
-export interface Scene {
-  sceneNumber: number;
-  text: string;
-  imageUrl?: string;
-  audioUrl?: string;
-}
-
-export interface Story {
-  title: string;
-  moral: string;
-  scenes: Scene[];
-}
-
 export interface StudioMediaItem {
   id: string;      // Unique ID for React keys
   type: 'image' | 'video' | 'youtube';
@@ -32,6 +17,7 @@ export interface StudioState {
   slideshowTransition: 'fade' | 'pan';
   isGenerating: boolean;
   error: string | null;
+  isMuted: boolean;
 }
 
 export interface MediaAsset {
@@ -40,14 +26,6 @@ export interface MediaAsset {
   url: string; // Blob URL
   file: File;
   duration: number;
-}
-
-export interface TimelineClip {
-  id:string;
-  assetId: string;
-  assetName: string;
-  startTime: number;
-  endTime: number;
 }
 
 export type PlayerId =
@@ -61,8 +39,6 @@ export type PlayerId =
   | 'audio-right-1'
   | 'audio-right-2'
   | 'audio-right-3'
-  | 'audio-right-4'
-  | 'audio-editor-left'
-  | 'audio-editor-right';
+  | 'audio-right-4';
 
 export type RecordingStatus = 'idle' | 'preparing' | 'ready' | 'recording' | 'paused' | 'finished';

@@ -22,6 +22,7 @@ interface WelcomeScreenProps {
   youtubeUrlInput: string;
   onYoutubeUrlInputChange: (value: string) => void;
   onYoutubeUrlSubmit: (e: React.FormEvent) => void;
+  onMovieEnded: () => void;
   movieRef: React.RefObject<{ seekTo: (time: number) => void; }>;
 }
 
@@ -29,12 +30,12 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = (props) => {
   const { 
     featureTitle, onFeatureTitleChange, onEnter, onStartRecordingRequest,
     recorderStatus, onAddMediaAssets, activeMediaAsset, movieSource, 
-    isMoviePlayerActive, onMoviePlayRequest, onMoviePauseRequest, 
+    isMoviePlayerActive, onMoviePlayRequest, onMoviePauseRequest, onMovieEnded,
     youtubeUrlInput, onYoutubeUrlInputChange, onYoutubeUrlSubmit, movieRef
   } = props;
 
   const [isExiting, setIsExiting] = useState(false);
-  const [includeMic, setIncludeMic] = useState(true);
+  const [includeMic, setIncludeMic] = useState(false);
   const { playSound } = useSound();
   const tvContainerRef = useRef<HTMLDivElement>(null);
 
@@ -89,9 +90,9 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = (props) => {
 
   return (
     <main className="flex-grow flex flex-col items-center justify-center p-4 lg:p-8 overflow-hidden" onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
-      <div className={`w-full max-w-5xl flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12 transition-opacity duration-500 ${isExiting ? 'tv-zoom-in-to-studio' : ''}`}>
-
-        {/* Info Panel */}
+      <div className={`w-full max-w-7xl flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16 transition-opacity duration-500 ${isExiting ? 'tv-zoom-in-to-studio' : ''}`}>
+        
+        {/* Left Panel: Info & Controls */}
         <div className="flex flex-col items-center lg:items-start text-center lg:text-left order-2 lg:order-1">
           <h2 
             className="font-lora text-4xl lg:text-5xl font-bold text-transparent bg-clip-text editable-title cursor-text outline-none rounded-md px-2 py-1 transition-all"
@@ -110,10 +111,34 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = (props) => {
           <button onClick={handleEnter} className="tool-button !text-lg !px-8 !py-4">
             Enter Studio
           </button>
+
+          {showRecordControls && !isExiting && (
+              <div className="mt-8 pt-6 border-t border-[var(--color-border-secondary)]/50 flex flex-col items-center lg:items-start gap-3 fade-in w-full max-w-xs lg:max-w-none">
+                <button 
+                  onClick={handleRecordClick} 
+                  className="tool-button flex items-center justify-center gap-2 !text-base !px-6 !py-3 bg-[rgba(var(--color-danger-rgb),0.2)] border-[rgba(var(--color-danger-rgb),0.5)] text-[rgb(var(--color-danger-rgb))] hover:bg-[rgba(var(--color-danger-rgb),0.4)] hover:border-[rgba(var(--color-danger-rgb),0.8)] w-full"
+                >
+                    <RecordIcon/>
+                    Start Recording
+                </button>
+                <div className="flex items-center">
+                    <input 
+                        id="mic-checkbox-welcome"
+                        type="checkbox"
+                        checked={includeMic}
+                        onChange={(e) => setIncludeMic(e.target.checked)}
+                        className="w-4 h-4 text-[var(--color-accent-1)] bg-[var(--color-surface-4)] border-[var(--color-border-secondary)] rounded focus:ring-[var(--color-accent-1)] focus:ring-offset-[var(--color-background-main)] focus:ring-2 cursor-pointer"
+                    />
+                    <label htmlFor="mic-checkbox-welcome" className="ml-2 text-sm text-[var(--color-text-secondary)] cursor-pointer">
+                        Include Microphone
+                    </label>
+                </div>
+              </div>
+          )}
         </div>
-        
-        {/* TV Panel */}
-        <div className="relative w-full lg:w-1/2 order-1 lg:order-2">
+
+        {/* Right Panel: TV */}
+        <div className="relative w-full lg:w-3/5 order-1 lg:order-2">
             <div ref={tvContainerRef} className="living-tv-container">
                 <div className="living-tv-body">
                     <div className="living-tv-screen-area">
@@ -126,6 +151,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = (props) => {
                                   isPlaying={isMoviePlayerActive}
                                   onPlayRequest={onMoviePlayRequest}
                                   onPauseRequest={onMoviePauseRequest}
+                                  onEnded={onMovieEnded}
                                   youtubeUrlInput={youtubeUrlInput}
                                   onYoutubeUrlInputChange={onYoutubeUrlInputChange}
                                   onYoutubeUrlSubmit={onYoutubeUrlSubmit}
@@ -146,30 +172,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = (props) => {
             </div>
         </div>
       </div>
-      
-      {showRecordControls && !isExiting && (
-          <div className="mt-8 flex flex-col items-center gap-3 fade-in">
-            <button 
-              onClick={handleRecordClick} 
-              className="tool-button flex items-center gap-2 !text-base !px-6 !py-3 bg-[rgba(var(--color-danger-rgb),0.2)] border-[rgba(var(--color-danger-rgb),0.5)] text-[rgb(var(--color-danger-rgb))] hover:bg-[rgba(var(--color-danger-rgb),0.4)] hover:border-[rgba(var(--color-danger-rgb),0.8)]"
-            >
-                <RecordIcon/>
-                Start Recording
-            </button>
-            <div className="flex items-center">
-                <input 
-                    id="mic-checkbox-welcome"
-                    type="checkbox"
-                    checked={includeMic}
-                    onChange={(e) => setIncludeMic(e.target.checked)}
-                    className="w-4 h-4 text-[var(--color-accent-1)] bg-[var(--color-surface-4)] border-[var(--color-border-secondary)] rounded focus:ring-[var(--color-accent-1)] focus:ring-offset-[var(--color-background-main)] focus:ring-2 cursor-pointer"
-                />
-                <label htmlFor="mic-checkbox-welcome" className="ml-2 text-sm text-[var(--color-text-secondary)] cursor-pointer">
-                    Include Microphone
-                </label>
-            </div>
-          </div>
-      )}
     </main>
   );
 };

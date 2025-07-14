@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useEffect, useRef } from 'react';
 
 declare global {
@@ -16,9 +17,10 @@ interface YouTubePlayerProps {
     onPlayerPlay: () => void;
     onPlayerPause: () => void;
     onEnded?: () => void;
+    isMuted?: boolean;
 }
 
-const YouTubePlayer: React.FC<YouTubePlayerProps> = ({ videoId, isPlaying, onPlayerPlay, onPlayerPause, onEnded }) => {
+const YouTubePlayer: React.FC<YouTubePlayerProps> = ({ videoId, isPlaying, onPlayerPlay, onPlayerPause, onEnded, isMuted }) => {
     const playerRef = useRef<any>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -37,9 +39,17 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({ videoId, isPlaying, onPla
                         iv_load_policy: 3,
                     },
                     events: {
+                        'onReady': onPlayerReady,
                         'onStateChange': onPlayerStateChange
                     }
                 });
+            }
+        };
+        
+        const onPlayerReady = () => {
+            // Apply initial mute state once player is ready
+            if (isMuted) {
+                playerRef.current?.mute();
             }
         };
 
@@ -68,7 +78,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({ videoId, isPlaying, onPla
                 playerRef.current = null;
             }
         };
-    }, [videoId, onPlayerPlay, onPlayerPause, onEnded]);
+    }, [videoId, onPlayerPlay, onPlayerPause, onEnded, isMuted]);
 
     useEffect(() => {
         if (playerRef.current && typeof playerRef.current.getPlayerState === 'function') {
@@ -80,6 +90,16 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({ videoId, isPlaying, onPla
             }
         }
     }, [isPlaying]);
+
+    useEffect(() => {
+        if (playerRef.current && typeof playerRef.current.isMuted === 'function') {
+            if (isMuted && !playerRef.current.isMuted()) {
+                playerRef.current.mute();
+            } else if (!isMuted && playerRef.current.isMuted()) {
+                playerRef.current.unMute();
+            }
+        }
+    }, [isMuted]);
 
     return <div ref={containerRef} className="w-full h-full" />;
 };

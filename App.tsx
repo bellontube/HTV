@@ -25,6 +25,7 @@ type Theme = 'indigo-empress' | 'ruby-royalty' | 'nollywood-noir';
 interface ScreenRecorderHandle {
   prepare: (includeMic: boolean) => void;
   cancel: () => void;
+  stop: () => void;
 }
 
 const App: React.FC = () => {
@@ -40,7 +41,7 @@ const App: React.FC = () => {
   const [subTitle, setSubTitle] = useState("Barka da zuwa! Idan kuna jin daɗin shirin, ku danna alamar so (like) sannan kuyi subscribing.");
   const [featureTitle, setFeatureTitle] = useState("The Daily Feature");
   
-  // Media State
+  // Media State - Simplified to one active asset, no library.
   const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([]);
   const [activeAssetId, setActiveAssetId] = useState<string | null>(null);
   
@@ -69,6 +70,14 @@ const App: React.FC = () => {
       screenRecorderRef.current.prepare(includeMic);
     }
   };
+
+  const handleMovieEnded = useCallback(() => {
+      // If a recording is in progress when the main movie finishes, stop the recording.
+      if (recorderStatus === 'recording' || recorderStatus === 'paused') {
+        console.log("Main movie finished, stopping recording automatically.");
+        screenRecorderRef.current?.stop();
+      }
+  }, [recorderStatus]);
 
   // Load settings from DB on mount
   useEffect(() => {
@@ -106,15 +115,9 @@ const App: React.FC = () => {
     document.documentElement.className = `theme-${theme}`;
   }, [theme]);
   
-  // Hydrate all assets from DB on mount
+  // Hydrate audio assets from DB on mount
   useEffect(() => {
     const hydrateAssets = async () => {
-        const storedAssets = await db.getAllItems('videos');
-        if (storedAssets && storedAssets.length > 0) {
-            const assetsWithUrls = storedAssets.map(asset => ({ ...asset, url: URL.createObjectURL(asset.file) }));
-            setMediaAssets(assetsWithUrls);
-        }
-        
         const storedAudio = await db.getAllItems('audio_messages');
         if (storedAudio && storedAudio.length > 0) {
             const audioSrcs: Record<string, string> = {};
@@ -140,20 +143,29 @@ const App: React.FC = () => {
   }, [activeAssetId]);
 
   const handleAddMediaAssets = (files: FileList) => {
-    const assetsToProcess: MediaAsset[] = Array.from(files).map(file => ({ id: self.crypto.randomUUID(), name: file.name, url: URL.createObjectURL(file), file, duration: 0 }));
+    // Revoke URLs from previous assets before replacing them
+    mediaAssets.forEach(asset => URL.revokeObjectURL(asset.url));
+    
+    const assetsToProcess: MediaAsset[] = Array.from(files).filter(f => f.type.startsWith('video/')).map(file => ({ id: self.crypto.randomUUID(), name: file.name, url: URL.createObjectURL(file), file, duration: 0 }));
+
+    if (assetsToProcess.length === 0) return;
+
     const promises = assetsToProcess.map(asset => new Promise<MediaAsset>(resolve => {
         const videoEl = document.createElement('video');
         videoEl.src = asset.url;
         videoEl.onloadedmetadata = async () => {
             const finalAsset = { ...asset, duration: videoEl.duration };
-            await db.storeItem('videos', { id: finalAsset.id, name: finalAsset.name, file: finalAsset.file, duration: finalAsset.duration });
             resolve(finalAsset);
         };
         videoEl.onerror = () => { console.error(`Error loading metadata for ${asset.name}`); resolve(asset); };
     }));
     Promise.all(promises).then(finalAssets => {
-        setMediaAssets(prev => [...prev, ...finalAssets]);
-        if (finalAssets.length > 0 && !activeAssetId) setActiveAssetId(finalAssets[0].id);
+        setMediaAssets(finalAssets);
+        if (finalAssets.length > 0) {
+          setActiveAssetId(finalAssets[0].id);
+        } else {
+          setActiveAssetId(null);
+        }
     });
   };
 
@@ -185,20 +197,29 @@ const App: React.FC = () => {
 
   const handlePlay = useCallback((id: PlayerId) => {
     setActivePlayers(currentPlayers => {
+        const next = new Set(currentPlayers);
+
         if (id.startsWith('audio-')) {
             const videoPlayerIds: PlayerId[] = ['movie', 'studio-left', 'studio-right'];
             const currentlyPlayingVideos = new Set([...currentPlayers].filter(p => videoPlayerIds.includes(p)));
-            if (currentlyPlayingVideos.size > 0) setPlayersToResume(currentlyPlayingVideos);
-            else setPlayersToResume(new Set());
-            const next = new Set(currentPlayers);
-            currentlyPlayingVideos.forEach(p => next.delete(p));
+            if (currentlyPlayingVideos.size > 0) {
+                setPlayersToResume(currentlyPlayingVideos);
+            } else {
+                setPlayersToResume(new Set());
+            }
+            videoPlayerIds.forEach(p => next.delete(p));
             next.add(id);
-            return next;
+        } else if (id === 'movie') {
+            next.delete('studio-left');
+            next.delete('studio-right');
+            next.add(id);
+        } else if (id.startsWith('studio-')) {
+            next.delete('movie');
+            next.add(id);
         } else {
-            const next = new Set(currentPlayers);
             next.add(id);
-            return next;
         }
+        return next;
     });
   }, []);
 
@@ -271,13 +292,14 @@ const App: React.FC = () => {
                   isMoviePlayerActive={activePlayers.has('movie')}
                   onMoviePlayRequest={handleMoviePlayRequest}
                   onMoviePauseRequest={handleMoviePauseRequest}
+                  onMovieEnded={handleMovieEnded}
                   youtubeUrlInput={youtubeUrlInput}
                   onYoutubeUrlInputChange={setYoutubeUrlInput}
                   onYoutubeUrlSubmit={handleYoutubeUrlSubmit}
                   movieRef={movieRef}
                 />;
       case 'studio':
-        return ( <StudioProvider> <StudioPage mediaAssets={mediaAssets} onAddMediaAssets={handleAddMediaAssets} activeMediaAsset={activeMediaAsset} onSelectAsset={setActiveAssetId} movieRef={movieRef} movieSource={movieSource} youtubeUrlInput={youtubeUrlInput} onYoutubeUrlInputChange={setYoutubeUrlInput} onYoutubeUrlSubmit={handleYoutubeUrlSubmit} isMoviePlayerActive={activePlayers.has('movie')} onMoviePlayRequest={handleMoviePlayRequest} onMoviePauseRequest={handleMoviePauseRequest} isLeftStudioActive={activePlayers.has('studio-left')} isRightStudioActive={activePlayers.has('studio-right')} onStudioPlayRequest={handleStudioPlayRequest} onStudioPauseRequest={handleStudioPauseRequest} /> </StudioProvider> );
+        return ( <StudioProvider> <StudioPage onAddMediaAssets={handleAddMediaAssets} activeMediaAsset={activeMediaAsset} movieRef={movieRef} movieSource={movieSource} youtubeUrlInput={youtubeUrlInput} onYoutubeUrlInputChange={setYoutubeUrlInput} onYoutubeUrlSubmit={handleYoutubeUrlSubmit} isMoviePlayerActive={activePlayers.has('movie')} onMoviePlayRequest={handleMoviePlayRequest} onMoviePauseRequest={handleMoviePauseRequest} onMovieEnded={handleMovieEnded} isLeftStudioActive={activePlayers.has('studio-left')} isRightStudioActive={activePlayers.has('studio-right')} onStudioPlayRequest={handleStudioPlayRequest} onStudioPauseRequest={handleStudioPauseRequest} /> </StudioProvider> );
       case 'goodbye':
         return <GoodbyeScreen featureTitle={featureTitle} onAnimationEnd={() => { setCurrentView('welcome'); }} />;
     }

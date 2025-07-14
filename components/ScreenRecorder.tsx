@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { DownloadIcon } from './icons/DownloadIcon.tsx';
 import { CloseIcon } from './icons/CloseIcon.tsx';
@@ -16,6 +17,7 @@ interface ScreenRecorderProps {
 interface ScreenRecorderHandle {
   prepare: (includeMic: boolean) => void;
   cancel: () => void;
+  stop: () => void;
 }
 
 const ScreenRecorder = forwardRef<ScreenRecorderHandle, ScreenRecorderProps>(({ onStatusChange }, ref) => {
@@ -43,6 +45,17 @@ const ScreenRecorder = forwardRef<ScreenRecorderHandle, ScreenRecorderProps>(({ 
         mediaRecorderRef.current = null;
     };
     
+    const handleStopRecording = () => {
+        // This is now mainly triggered by videoTrack.onended
+        if (mediaRecorderRef.current && (status === 'recording' || status === 'paused')) {
+            mediaRecorderRef.current.stop();
+        } else if (status === 'ready') {
+            // If recording was prepared but not started, just clean up.
+            cleanup();
+            setStatus('idle');
+        }
+    };
+
     useImperativeHandle(ref, () => ({
         prepare: (includeMic: boolean) => {
             prepareToRecord(includeMic);
@@ -50,6 +63,9 @@ const ScreenRecorder = forwardRef<ScreenRecorderHandle, ScreenRecorderProps>(({ 
         cancel: () => {
             cleanup();
             setStatus('idle');
+        },
+        stop: () => {
+            handleStopRecording();
         }
     }));
 
@@ -63,8 +79,14 @@ const ScreenRecorder = forwardRef<ScreenRecorderHandle, ScreenRecorderProps>(({ 
 
         try {
             const displayStream = await navigator.mediaDevices.getDisplayMedia({
-                video: { displaySurface: "browser" },
-                audio: true, 
+                // Prefer capturing the current tab to get a clean view without browser chrome,
+                // and to help the browser identify the correct audio stream.
+                preferCurrentTab: true,
+                video: { 
+                    // @ts-ignore The 'cursor' property is valid but not in all TS lib versions.
+                    cursor: "never" // Don't record the mouse cursor
+                },
+                audio: true, // Request tab audio
             });
 
             const videoTrack = displayStream.getVideoTracks()[0];
@@ -107,6 +129,8 @@ const ScreenRecorder = forwardRef<ScreenRecorderHandle, ScreenRecorderProps>(({ 
             const finalStream = new MediaStream(tracksToCombine);
             mediaStreamRef.current = finalStream;
             
+            // The user will now use the browser's "Stop sharing" button to stop.
+            // This event fires when that happens.
             videoTrack.onended = () => {
                 handleStopRecording();
             };
@@ -165,11 +189,7 @@ const ScreenRecorder = forwardRef<ScreenRecorderHandle, ScreenRecorderProps>(({ 
         setStatus('recording');
       }
     }
-    const handleStopRecording = () => {
-        if (mediaRecorderRef.current && (status === 'recording' || status === 'paused')) {
-            mediaRecorderRef.current.stop();
-        }
-    };
+    
     const handleCancel = () => {
       cleanup();
       setStatus('idle');
@@ -278,5 +298,7 @@ const ScreenRecorder = forwardRef<ScreenRecorderHandle, ScreenRecorderProps>(({ 
         </div>
     );
 });
+
+ScreenRecorder.displayName = 'ScreenRecorder';
 
 export default ScreenRecorder;

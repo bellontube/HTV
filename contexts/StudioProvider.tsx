@@ -33,6 +33,7 @@ const createInitialStudioState = (defaults: Partial<StudioState> = {}): StudioSt
   slideshowTransition: 'fade',
   isGenerating: false,
   error: null,
+  isMuted: true, // Muted by default
   ...defaults,
 });
 

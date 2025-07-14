@@ -1,4 +1,5 @@
 
+
 import React, { useState, forwardRef, useEffect, useRef } from 'react';
 import YouTubePlayer from './YouTubePlayer.tsx';
 import { MediaAsset } from '../types.ts';
@@ -16,6 +17,7 @@ interface MoviePlayerProps {
     isPlaying: boolean;
     onPlayRequest: () => void;
     onPauseRequest: () => void;
+    onEnded?: () => void;
     youtubeUrlInput: string;
     onYoutubeUrlInputChange: (value: string) => void;
     onYoutubeUrlSubmit: (e: React.FormEvent) => void;
@@ -31,7 +33,7 @@ interface MoviePlayerProps {
 const MoviePlayer = forwardRef<{ seekTo: (time: number) => void; }, MoviePlayerProps>(
     (props, ref) => {
         const { 
-            assetToPlay, youtubeUrl, isPlaying, onPlayRequest, onPauseRequest, 
+            assetToPlay, youtubeUrl, isPlaying, onPlayRequest, onPauseRequest, onEnded,
             youtubeUrlInput, onYoutubeUrlInputChange, onYoutubeUrlSubmit,
             onTimeUpdate, onDurationChange, onAddMediaAssets,
             clipStartTime = 0,
@@ -132,12 +134,14 @@ const MoviePlayer = forwardRef<{ seekTo: (time: number) => void; }, MoviePlayerP
                         onPause={onPauseRequest}
                         onTimeUpdate={handleTimeUpdate}
                         onLoadedMetadata={handleLoadedMetadata}
+                        onEnded={onEnded}
                         controls
                     />
                 ) : videoId ? (
                     <YouTubePlayer 
                         videoId={videoId} isPlaying={isPlaying}
                         onPlayerPlay={onPlayRequest} onPlayerPause={onPauseRequest}
+                        onEnded={onEnded}
                     />
                 ) : (
                     showUploadPlaceholder ? (
@@ -175,7 +179,6 @@ const MoviePlayer = forwardRef<{ seekTo: (time: number) => void; }, MoviePlayerP
                                     ref={fileInputRef}
                                     type="file"
                                     accept="video/*"
-                                    multiple
                                     onChange={handleFileChange}
                                     className="hidden"
                                 />

@@ -1,4 +1,5 @@
 
+
 import React, { useCallback } from 'react';
 import ImageStudio from '../ImageStudio.tsx';
 import MoviePlayer from '../MoviePlayer.tsx';
@@ -8,10 +9,8 @@ type MovieSource = { type: 'local'; assetId: string; } | { type: 'youtube'; url:
 
 interface StudioPageProps {
     // Media props
-    mediaAssets: MediaAsset[];
     onAddMediaAssets: (files: FileList) => void;
     activeMediaAsset: MediaAsset | null;
-    onSelectAsset: (assetId: string) => void;
     // Movie Player props
     movieRef: React.RefObject<{ seekTo: (time: number) => void; }>;
     movieSource: MovieSource;
@@ -21,6 +20,7 @@ interface StudioPageProps {
     isMoviePlayerActive: boolean;
     onMoviePlayRequest: () => void;
     onMoviePauseRequest: () => void;
+    onMovieEnded: () => void;
     // Studio Player props
     isLeftStudioActive: boolean;
     isRightStudioActive: boolean;
@@ -30,10 +30,8 @@ interface StudioPageProps {
 
 const StudioPage: React.FC<StudioPageProps> = (props) => {
     const { 
-        mediaAssets,
         onAddMediaAssets,
         activeMediaAsset,
-        onSelectAsset,
         movieRef,
         movieSource,
         youtubeUrlInput,
@@ -42,6 +40,7 @@ const StudioPage: React.FC<StudioPageProps> = (props) => {
         isMoviePlayerActive,
         onMoviePlayRequest,
         onMoviePauseRequest,
+        onMovieEnded,
         isLeftStudioActive,
         isRightStudioActive,
         onStudioPlayRequest,
@@ -81,7 +80,9 @@ const StudioPage: React.FC<StudioPageProps> = (props) => {
                               isPlaying={isMoviePlayerActive} 
                               onPlayRequest={onMoviePlayRequest} 
                               onPauseRequest={onMoviePauseRequest}
+                              onEnded={onMovieEnded}
                               onAddMediaAssets={onAddMediaAssets}
+                              showUploadPlaceholder={!activeMediaAsset && !movieSource}
                             />
                         </div>
                     </div>
