@@ -46,15 +46,15 @@ const ColorPalette: React.FC<ColorPaletteProps> = ({ colors, onClose }) => {
 
     return (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 fade-in">
-            <div className="relative bg-gray-900/80 border border-purple-500/30 rounded-2xl p-6 shadow-2xl shadow-purple-900/50">
-                <button onClick={handleClose} className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-gray-700 text-white flex items-center justify-center hover:bg-red-500 transition-colors" aria-label="Close palette">
+            <div className="relative bg-[var(--color-surface-2)]/80 border border-[var(--color-accent-1)]/30 rounded-2xl p-6 shadow-2xl shadow-[var(--color-shadow-primary)]">
+                <button onClick={handleClose} className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-[var(--color-surface-4)] text-[var(--color-text-primary)] flex items-center justify-center hover:bg-[rgb(var(--color-danger-rgb))] transition-colors" aria-label="Close palette">
                     &times;
                 </button>
-                <h3 className="text-lg font-lora text-center text-purple-300 mb-4">Dominant Colors</h3>
+                <h3 className="text-lg font-lora text-center text-[var(--color-accent-text)] mb-4">Dominant Colors</h3>
                 <div className="grid grid-cols-5 gap-4">
                     {colors.map(color => <ColorSwatch key={color} color={color} />)}
                 </div>
-                <p className="text-xs text-gray-500 text-center mt-4">Click a color to copy its hex code.</p>
+                <p className="text-xs text-[var(--color-text-muted)] text-center mt-4">Click a color to copy its hex code.</p>
             </div>
         </div>
     );

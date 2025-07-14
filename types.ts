@@ -1,5 +1,6 @@
 
 
+
 export interface Scene {
   sceneNumber: number;
   text: string;
@@ -60,4 +61,8 @@ export type PlayerId =
   | 'audio-right-1'
   | 'audio-right-2'
   | 'audio-right-3'
-  | 'audio-right-4';
+  | 'audio-right-4'
+  | 'audio-editor-left'
+  | 'audio-editor-right';
+
+export type RecordingStatus = 'idle' | 'preparing' | 'ready' | 'recording' | 'paused' | 'finished';

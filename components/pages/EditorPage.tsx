@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import MoviePlayer from '../MoviePlayer.tsx';
 import AudioMessagePlayer from '../AudioMessagePlayer.tsx';
@@ -8,9 +9,7 @@ import ExportModal from '../ExportModal.tsx';
 import { BackIcon } from '../icons/BackIcon.tsx';
 import { SparklesIcon } from '../icons/SparklesIcon.tsx';
 import { ExportIcon } from '../icons/ExportIcon.tsx';
-import { MediaAsset, TimelineClip } from '../../types.ts';
-
-type PlayerId = 'movie' | 'audio-left' | 'audio-right';
+import { MediaAsset, TimelineClip, PlayerId } from '../../types.ts';
 
 interface EditorPageProps {
     onNavigateToImport: () => void;
@@ -45,7 +44,10 @@ interface EditorPageProps {
     activePlayer: PlayerId | null;
     onAudioPlayRequest: (id: PlayerId) => void;
     onAudioPauseRequest: (id: PlayerId) => void;
-    onAudioEnded: () => void;
+    onAudioEnded: (id: PlayerId) => void;
+    audioSources: Record<string, string | null>;
+    onAudioFileChange: (id: PlayerId, file: File) => void;
+    onAudioFileRemove: (id: PlayerId) => void;
     // Export props
     watermark: { url: string; file: File; } | null;
     onWatermarkChange: (watermark: { url: string; file: File; } | null) => void;
@@ -61,6 +63,9 @@ const EditorPage: React.FC<EditorPageProps> = (props) => {
     const [isAiHelperOpen, setIsAiHelperOpen] = useState(false);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
+    const leftAudioId: PlayerId = 'audio-editor-left';
+    const rightAudioId: PlayerId = 'audio-editor-right';
+
     return (
         <div className="relative w-full h-full flex flex-col bg-gray-900">
             {isAiHelperOpen && <AIHelperModal onClose={() => setIsAiHelperOpen(false)} />}
@@ -73,8 +78,30 @@ const EditorPage: React.FC<EditorPageProps> = (props) => {
                     </button>
                 </div>
                 <div className="flex items-center gap-4">
-                    <AudioMessagePlayer ref={p.audioLeftRef} title="Left Audio Channel" id="audio-import-left" isPlaying={p.activePlayer === 'audio-left'} onPlayRequest={() => p.onAudioPlayRequest('audio-left')} onPauseRequest={() => p.onAudioPauseRequest('audio-left')} onEnded={p.onAudioEnded}/>
-                    <AudioMessagePlayer ref={p.audioRightRef} title="Right Audio Channel" id="audio-import-right" isPlaying={p.activePlayer === 'audio-right'} onPlayRequest={() => p.onAudioPlayRequest('audio-right')} onPauseRequest={() => p.onAudioPauseRequest('audio-right')} onEnded={p.onAudioEnded}/>
+                    <AudioMessagePlayer
+                        ref={p.audioLeftRef}
+                        title="Left Audio Channel"
+                        id={leftAudioId}
+                        isPlaying={p.activePlayer === leftAudioId}
+                        audioUrl={p.audioSources[leftAudioId] || null}
+                        onPlayRequest={() => p.onAudioPlayRequest(leftAudioId)}
+                        onPauseRequest={() => p.onAudioPauseRequest(leftAudioId)}
+                        onEnded={() => p.onAudioEnded(leftAudioId)}
+                        onFileChange={(file) => p.onAudioFileChange(leftAudioId, file)}
+                        onFileRemove={() => p.onAudioFileRemove(leftAudioId)}
+                    />
+                    <AudioMessagePlayer
+                        ref={p.audioRightRef}
+                        title="Right Audio Channel"
+                        id={rightAudioId}
+                        isPlaying={p.activePlayer === rightAudioId}
+                        audioUrl={p.audioSources[rightAudioId] || null}
+                        onPlayRequest={() => p.onAudioPlayRequest(rightAudioId)}
+                        onPauseRequest={() => p.onAudioPauseRequest(rightAudioId)}
+                        onEnded={() => p.onAudioEnded(rightAudioId)}
+                        onFileChange={(file) => p.onAudioFileChange(rightAudioId, file)}
+                        onFileRemove={() => p.onAudioFileRemove(rightAudioId)}
+                    />
                 </div>
                 <div className="flex items-center gap-4">
                     <button onClick={() => setIsAiHelperOpen(true)} className="tool-button flex items-center gap-2"><SparklesIcon /> AI Helper</button>

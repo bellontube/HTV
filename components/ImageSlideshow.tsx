@@ -67,7 +67,7 @@ const ImageSlideshow: React.FC<ImageSlideshowProps> = ({ images }) => {
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center gap-4">
-      <div className="w-full max-w-[280px] aspect-[9/16] bg-black rounded-2xl shadow-2xl shadow-purple-900/20 overflow-hidden border-2 border-gray-700 relative flex flex-col">
+      <div className="w-full max-w-[280px] aspect-[9/16] bg-black rounded-2xl shadow-2xl shadow-[var(--color-shadow-primary)] overflow-hidden border-2 border-[var(--color-border-secondary)] relative flex flex-col">
         {/* Image Viewport */}
         <div className="flex-grow relative bg-black">
           {images.length > 0 ? (
@@ -77,7 +77,7 @@ const ImageSlideshow: React.FC<ImageSlideshowProps> = ({ images }) => {
               </div>
             ))
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 text-center p-4">
+            <div className="w-full h-full flex flex-col items-center justify-center text-[var(--color-text-muted)] text-center p-4">
                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                <p>Your slideshow will play here.</p>
             </div>
@@ -86,22 +86,22 @@ const ImageSlideshow: React.FC<ImageSlideshowProps> = ({ images }) => {
 
         {/* Controls Area */}
         <div className="shrink-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-          <div className="w-full bg-gray-600/50 rounded-full h-1 mb-3">
-            <div className="bg-purple-500 h-1 rounded-full transition-all duration-500" style={{width: `${progressPercentage}%`}}></div>
+          <div className="w-full bg-[var(--color-surface-4)]/50 rounded-full h-1 mb-3">
+            <div className="bg-[var(--color-accent-1)] h-1 rounded-full transition-all duration-500" style={{width: `${progressPercentage}%`}}></div>
           </div>
           <div className="flex items-center justify-center gap-5">
-            <button onClick={handlePrev} disabled={images.length < 2} className="text-gray-300 hover:text-white disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"><PrevIcon /></button>
-            <button onClick={handlePlayPause} disabled={images.length === 0} className="w-12 h-12 rounded-full bg-purple-600 text-white flex items-center justify-center hover:bg-purple-700 transition-all transform hover:scale-110 shadow-lg disabled:bg-purple-900 disabled:cursor-not-allowed" aria-label={isPlaying ? 'Pause' : 'Play'}>
+            <button onClick={handlePrev} disabled={images.length < 2} className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:text-[var(--color-text-muted)] disabled:cursor-not-allowed transition-colors"><PrevIcon /></button>
+            <button onClick={handlePlayPause} disabled={images.length === 0} className="w-12 h-12 rounded-full bg-[var(--color-accent-1)] text-white flex items-center justify-center hover:opacity-90 transition-all transform hover:scale-110 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" aria-label={isPlaying ? 'Pause' : 'Play'}>
               {isPlaying && images.length > 0 ? <PauseIcon /> : <PlayIcon />}
             </button>
-            <button onClick={handleNext} disabled={images.length < 2} className="text-gray-300 hover:text-white disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"><NextIcon /></button>
+            <button onClick={handleNext} disabled={images.length < 2} className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:text-[var(--color-text-muted)] disabled:cursor-not-allowed transition-colors"><NextIcon /></button>
           </div>
         </div>
       </div>
       
       {/* Speed Control */}
       <div className="w-full max-w-[280px] flex items-center gap-2 px-2">
-        <label htmlFor="speed" className="text-xs text-gray-400">Speed</label>
+        <label htmlFor="speed" className="text-xs text-[var(--color-text-muted)]">Speed</label>
         <input 
           id="speed"
           type="range"
@@ -111,9 +111,9 @@ const ImageSlideshow: React.FC<ImageSlideshowProps> = ({ images }) => {
           value={delay / 1000}
           onChange={handleDelayChange}
           disabled={images.length === 0}
-          className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer range-sm disabled:opacity-50"
+          className="w-full"
         />
-        <span className="text-xs text-gray-300 w-8 text-right">
+        <span className="text-xs text-[var(--color-text-secondary)] w-8 text-right">
           {delay/1000}s
         </span>
       </div>

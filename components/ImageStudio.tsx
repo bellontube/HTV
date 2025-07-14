@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useStudio } from '../contexts/StudioProvider.tsx';
 import { useSound } from '../hooks/useSound.tsx';
@@ -302,13 +303,13 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ studio, isStudioActive, onPla
             onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
             onDrop={handleDrop}
         >
-            <h2 className="text-xl font-bold font-lora text-purple-300 text-center shrink-0">
-                <span contentEditable={!anyStudioBusy} suppressContentEditableWarning onBlur={e => dispatch({type: 'SET_VALUE', payload: {studio, key: 'title', value: e.currentTarget.textContent?.trim() || 'Untitled' }})} onKeyDown={handleEditableKeyDown} className="cursor-pointer outline-none focus:ring-2 focus:ring-purple-500 rounded-md px-2">{title}</span>
-                {hasImages && <span className="ml-1 text-gray-400 font-normal">({images.length})</span>}
+            <h2 className="text-xl font-bold font-lora text-[var(--color-accent-text)] text-center shrink-0">
+                <span contentEditable={!anyStudioBusy} suppressContentEditableWarning onBlur={e => dispatch({type: 'SET_VALUE', payload: {studio, key: 'title', value: e.currentTarget.textContent?.trim() || 'Untitled' }})} onKeyDown={handleEditableKeyDown} className="cursor-pointer outline-none focus:ring-2 focus:ring-[var(--color-accent-1)] rounded-md px-2">{title}</span>
+                {hasImages && <span className="ml-1 text-[var(--color-text-muted)] font-normal">({images.length})</span>}
             </h2>
 
-            <div className={`w-full flex-grow bg-black shadow-2xl shadow-purple-900/20 border-2 border-gray-700 relative flex flex-col overflow-hidden transition-all ${isDraggingOver ? 'drag-over-active' : ''} ${hasImages ? 'rounded-2xl' : 'rounded-t-2xl'}`}>
-                <div className="flex-grow relative bg-gray-900 flex flex-col">
+            <div className={`w-full flex-grow bg-black shadow-2xl shadow-[var(--color-shadow-primary)] border-2 border-[var(--color-border-secondary)] relative flex flex-col overflow-hidden transition-all ${isDraggingOver ? 'drag-over-active' : ''} ${hasImages ? 'rounded-2xl' : 'rounded-t-2xl'}`}>
+                <div className="flex-grow relative bg-[var(--color-surface-2)] flex flex-col">
                      <div className="flex-grow relative overflow-hidden">
                         {hasImages ? images.map((item, index) => (
                             <div key={item.id} className={`absolute inset-0 transition-opacity duration-1000 ${index === currentIndex ? 'opacity-100' : 'opacity-0'}`}>
@@ -335,7 +336,7 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ studio, isStudioActive, onPla
                                     )}
 
                                     {item.type === 'image' && item.source === 'ai' && (
-                                        <button onClick={(e) => handlePaletteClick(e, item.id, item.url)} className="palette-icon p-1.5 bg-black/50 rounded-full text-white hover:bg-black/80 hover:text-purple-300" aria-label="Extract color palette">
+                                        <button onClick={(e) => handlePaletteClick(e, item.id, item.url)} className="palette-icon p-1.5 bg-black/50 rounded-full text-white hover:bg-black/80 hover:text-[var(--color-accent-text)]" aria-label="Extract color palette">
                                             <PaletteIcon />
                                         </button>
                                     )}
@@ -347,7 +348,7 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ studio, isStudioActive, onPla
                                 </div>
                             </div>
                         )) : (
-                            <div className="h-full w-full flex flex-col p-4 gap-3 justify-center items-center text-gray-500 text-center">
+                            <div className="h-full w-full flex flex-col p-4 gap-3 justify-center items-center text-[var(--color-text-muted)] text-center">
                                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                <p className="text-sm">{isDraggingOver ? 'Drop files to import' : 'Use the controls below to begin.'}</p>
                             </div>
@@ -360,13 +361,13 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ studio, isStudioActive, onPla
                     <div className="shrink-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent min-h-[52px]">
                         {hasImages && (
                             <>
-                              <div className="w-full bg-gray-600/50 rounded-full h-1 mb-3">
-                                <div className="bg-purple-500 h-1 rounded-full transition-all duration-500" style={{width: `${progressPercentage}%`}}></div>
+                              <div className="w-full bg-[var(--color-surface-4)]/50 rounded-full h-1 mb-3">
+                                <div className="bg-[var(--color-accent-1)] h-1 rounded-full transition-all duration-500" style={{width: `${progressPercentage}%`}}></div>
                               </div>
                               <div className="flex items-center justify-center gap-5">
-                                <button onClick={handlePrev} disabled={images.length < 2} className="text-gray-300 hover:text-white disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"><PrevIcon /></button>
-                                <button onClick={handlePlayPause} className="w-12 h-12 rounded-full bg-purple-600 text-white flex items-center justify-center hover:bg-purple-700 transition-all transform hover:scale-110 shadow-lg" aria-label={isCurrentlyPlaying ? 'Pause' : 'Play'}>{isCurrentlyPlaying ? <PauseIcon /> : <PlayIcon />}</button>
-                                <button onClick={handleNext} disabled={images.length < 2} className="text-gray-300 hover:text-white disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"><NextIcon /></button>
+                                <button onClick={handlePrev} disabled={images.length < 2} className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:text-[var(--color-text-muted)] disabled:cursor-not-allowed transition-colors"><PrevIcon /></button>
+                                <button onClick={handlePlayPause} className="w-12 h-12 rounded-full bg-[var(--color-accent-1)] text-white flex items-center justify-center hover:opacity-90 transition-all transform hover:scale-110 shadow-lg" aria-label={isCurrentlyPlaying ? 'Pause' : 'Play'}>{isCurrentlyPlaying ? <PauseIcon /> : <PlayIcon />}</button>
+                                <button onClick={handleNext} disabled={images.length < 2} className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:text-[var(--color-text-muted)] disabled:cursor-not-allowed transition-colors"><NextIcon /></button>
                               </div>
                             </>
                         )}
@@ -375,15 +376,15 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ studio, isStudioActive, onPla
             </div>
 
             {!hasImages ? (
-                <div className="w-full shrink-0 p-3 flex flex-col gap-2 bg-gray-900/70 rounded-b-lg border-t-2 border-gray-700">
-                    <textarea id={`prompt-${uniqueId}`} value={prompt} onChange={(e) => dispatch({type: 'SET_VALUE', payload: {studio, key: 'prompt', value: e.target.value}})} disabled={anyStudioBusy} placeholder="Describe the images to generate..." className="w-full p-2 bg-gray-800 border border-gray-600 rounded-lg text-gray-200 focus:ring-1 focus:ring-purple-500 focus:border-purple-500 transition-all resize-none disabled:bg-gray-700 disabled:text-gray-500 text-center" rows={2}/>
+                <div className="w-full shrink-0 p-3 flex flex-col gap-2 bg-[var(--color-surface-2)]/70 rounded-b-lg border-t-2 border-[var(--color-border-secondary)]">
+                    <textarea id={`prompt-${uniqueId}`} value={prompt} onChange={(e) => dispatch({type: 'SET_VALUE', payload: {studio, key: 'prompt', value: e.target.value}})} disabled={anyStudioBusy} placeholder="Describe the images to generate..." className="w-full p-2 bg-[var(--color-surface-3)] border border-[var(--color-border-secondary)] rounded-lg text-[var(--color-text-primary)] focus:ring-1 focus:ring-[var(--color-accent-1)] focus:border-[var(--color-accent-1)] transition-all resize-none disabled:bg-[var(--color-surface-4)] disabled:text-[var(--color-text-muted)] text-center" rows={2}/>
                     
                     <div className="flex items-center gap-2">
-                        <YouTubeIcon className="h-6 w-6 shrink-0 text-red-500" />
+                        <YouTubeIcon className="h-6 w-6 shrink-0 text-[var(--color-brand-youtube)]" />
                         <input
                             type="url"
                             placeholder="Paste YouTube Shorts URL..."
-                            className="w-full text-xs p-1.5 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-1 focus:ring-purple-500 disabled:bg-gray-700"
+                            className="w-full text-xs p-1.5 bg-[var(--color-surface-3)] border border-[var(--color-border-secondary)] rounded-md text-[var(--color-text-primary)] focus:ring-1 focus:ring-[var(--color-accent-1)] disabled:bg-[var(--color-surface-4)]"
                             value={youtubeShortsUrl}
                             onChange={e => setYoutubeShortsUrl(e.target.value)}
                             onKeyDown={handleYoutubeShortsKeyDown}
@@ -391,7 +392,7 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ studio, isStudioActive, onPla
                         />
                         <button
                             onClick={handleImportYoutubeShort}
-                            className="text-xs bg-red-600 text-white font-bold p-1.5 px-2 rounded-md hover:bg-red-700 disabled:opacity-50"
+                            className="text-xs bg-[var(--color-brand-youtube)] text-white font-bold p-1.5 px-2 rounded-md hover:opacity-80 disabled:opacity-50"
                             disabled={anyStudioBusy || !youtubeShortsUrl.trim()}
                         >
                             Add
@@ -400,34 +401,34 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ studio, isStudioActive, onPla
 
                     <div className="flex flex-col gap-3 mt-2">
                         <div>
-                             <label htmlFor={`artStyle-${uniqueId}`} className="text-xs text-gray-400 mb-1 block">Art Style</label>
-                             <select id={`artStyle-${uniqueId}`} value={artStyle} onChange={e => dispatch({type: 'SET_VALUE', payload: {studio, key: 'artStyle', value: e.target.value}})} disabled={anyStudioBusy} className="w-full text-xs p-1.5 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-1 focus:ring-purple-500">
+                             <label htmlFor={`artStyle-${uniqueId}`} className="text-xs text-[var(--color-text-muted)] mb-1 block">Art Style</label>
+                             <select id={`artStyle-${uniqueId}`} value={artStyle} onChange={e => dispatch({type: 'SET_VALUE', payload: {studio, key: 'artStyle', value: e.target.value}})} disabled={anyStudioBusy} className="w-full text-xs p-1.5 bg-[var(--color-surface-3)] border border-[var(--color-border-secondary)] rounded-md text-[var(--color-text-primary)] focus:ring-1 focus:ring-[var(--color-accent-1)]">
                                  {Object.entries(artStyles).map(([key, value]) => <option key={key} value={value}>{key.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>)}
                              </select>
                         </div>
                         <div>
-                            <label htmlFor={`transition-${uniqueId}`} className="text-xs text-gray-400 mb-1 block">Transition (Images)</label>
-                            <select id={`transition-${uniqueId}`} value={slideshowTransition} onChange={e => dispatch({type: 'SET_VALUE', payload: {studio, key: 'slideshowTransition', value: e.target.value as 'fade' | 'pan'}})} disabled={anyStudioBusy} className="w-full text-xs p-1.5 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-1 focus:ring-purple-500">
+                            <label htmlFor={`transition-${uniqueId}`} className="text-xs text-[var(--color-text-muted)] mb-1 block">Transition (Images)</label>
+                            <select id={`transition-${uniqueId}`} value={slideshowTransition} onChange={e => dispatch({type: 'SET_VALUE', payload: {studio, key: 'slideshowTransition', value: e.target.value as 'fade' | 'pan'}})} disabled={anyStudioBusy} className="w-full text-xs p-1.5 bg-[var(--color-surface-3)] border border-[var(--color-border-secondary)] rounded-md text-[var(--color-text-primary)] focus:ring-1 focus:ring-[var(--color-accent-1)]">
                                 <option value="fade">Fade</option>
                                 <option value="pan">Pan (Ken Burns)</option>
                              </select>
                         </div>
                         <div>
-                            <label htmlFor={`count-${uniqueId}`} className="text-xs text-gray-400 mb-1 block">Image Count</label>
-                            <div className="flex items-center gap-2 bg-gray-800 border border-gray-600 rounded-md p-1">
-                                <input id={`count-${uniqueId}`} type="range" min="1" max="10" step="1" value={imageCount} onChange={e => dispatch({type: 'SET_VALUE', payload: {studio, key: 'imageCount', value: Number(e.target.value)}})} disabled={anyStudioBusy} className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer range-sm disabled:opacity-50"/>
-                                <span className="text-xs text-gray-300 w-6 text-right font-mono">{imageCount}</span>
+                            <label htmlFor={`count-${uniqueId}`} className="text-xs text-[var(--color-text-muted)] mb-1 block">Image Count</label>
+                            <div className="flex items-center gap-2 bg-[var(--color-surface-3)] border border-[var(--color-border-secondary)] rounded-md p-1">
+                                <input id={`count-${uniqueId}`} type="range" min="1" max="10" step="1" value={imageCount} onChange={e => dispatch({type: 'SET_VALUE', payload: {studio, key: 'imageCount', value: Number(e.target.value)}})} disabled={anyStudioBusy} className="w-full"/>
+                                <span className="text-xs text-[var(--color-text-secondary)] w-6 text-right font-mono">{imageCount}</span>
                             </div>
                         </div>
                     </div>
 
-                    {error && <p className="text-xs text-red-400 mt-1 text-center bg-red-900/30 p-2 rounded-md">{error}</p>}
+                    {error && <p className="text-xs text-[rgb(var(--color-danger-rgb))] mt-1 text-center bg-[rgba(var(--color-danger-rgb),0.1)] p-2 rounded-md">{error}</p>}
                     
                     <div className="flex items-stretch gap-2 mt-2">
-                        <button onClick={handleGenerateClick} disabled={!prompt || anyStudioBusy} className="flex-1 flex items-center justify-center gap-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-1.5 px-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-xs shadow-md">
+                        <button onClick={handleGenerateClick} disabled={!prompt || anyStudioBusy} className="flex-1 flex items-center justify-center gap-1.5 bg-gradient-to-r from-[var(--color-accent-1)] to-[var(--color-accent-2)] text-white font-bold py-1.5 px-3 rounded-lg hover:opacity-90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-xs shadow-md">
                             {isGenerating ? 'Generating...' : <><GenerateIcon/> Generate</>}
                         </button>
-                        <label htmlFor={`import-${uniqueId}`} className={`flex-1 flex items-center justify-center gap-1.5 bg-gray-600 text-white font-bold py-1.5 px-3 rounded-lg hover:bg-gray-700 transition-all duration-300 text-xs shadow-md ${anyStudioBusy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                        <label htmlFor={`import-${uniqueId}`} className={`flex-1 flex items-center justify-center gap-1.5 bg-[var(--color-surface-4)] text-[var(--color-text-primary)] font-bold py-1.5 px-3 rounded-lg hover:bg-opacity-80 transition-all duration-300 text-xs shadow-md ${anyStudioBusy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
                             <UploadIcon/> Import
                         </label>
                         <input id={`import-${uniqueId}`} ref={fileInputRef} type="file" accept="image/*,video/*" multiple onChange={(e) => { handleImport(e.target.files); if(e.target) e.target.value = ''; }} className="hidden" disabled={anyStudioBusy} />
@@ -437,22 +438,22 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ studio, isStudioActive, onPla
                 <div className="w-full shrink-0 flex flex-col gap-2 pt-2">
                      {currentItem?.type === 'image' && (
                         <div className="w-full flex items-center gap-2 px-1">
-                           <label htmlFor={`speed-${uniqueId}`} className="text-xs text-gray-400">Speed (Images)</label>
-                           <input id={`speed-${uniqueId}`} type="range" min="1" max="10" step="0.5" value={delay / 1000} onChange={handleDelayChange} className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer range-sm"/>
-                           <span className="text-xs text-gray-300 w-8 text-right font-mono">{delay/1000}s</span>
+                           <label htmlFor={`speed-${uniqueId}`} className="text-xs text-[var(--color-text-muted)]">Speed (Images)</label>
+                           <input id={`speed-${uniqueId}`} type="range" min="1" max="10" step="0.5" value={delay / 1000} onChange={handleDelayChange} className="w-full"/>
+                           <span className="text-xs text-[var(--color-text-secondary)] w-8 text-right font-mono">{delay/1000}s</span>
                        </div>
                      )}
 
-                    {error && <p className="text-xs text-red-400 mt-1 text-center bg-red-900/30 p-2 rounded-md">{error}</p>}
+                    {error && <p className="text-xs text-[rgb(var(--color-danger-rgb))] mt-1 text-center bg-[rgba(var(--color-danger-rgb),0.1)] p-2 rounded-md">{error}</p>}
 
                     {!isConfirmingClear ? (
-                        <button onClick={() => { playSound('click'); setIsConfirmingClear(true); }} disabled={anyStudioBusy} className="w-full bg-red-800/80 text-white font-bold py-1.5 rounded-lg hover:bg-red-700 transition-colors duration-300 text-xs disabled:bg-red-900/50 disabled:cursor-not-allowed mt-2">Clear Media</button>
+                        <button onClick={() => { playSound('click'); setIsConfirmingClear(true); }} disabled={anyStudioBusy} className="w-full bg-[rgba(var(--color-danger-rgb),0.8)] text-white font-bold py-1.5 rounded-lg hover:bg-[rgb(var(--color-danger-rgb))] transition-colors duration-300 text-xs disabled:opacity-50 disabled:cursor-not-allowed mt-2">Clear Media</button>
                     ) : (
-                        <div className="mt-2 bg-red-900/30 p-2 rounded-lg text-center">
-                            <p className="text-xs text-red-300 mb-2">Are you sure?</p>
+                        <div className="mt-2 bg-[rgba(var(--color-danger-rgb),0.1)] p-2 rounded-lg text-center">
+                            <p className="text-xs text-[rgb(var(--color-danger-rgb))] mb-2">Are you sure?</p>
                             <div className="flex gap-2 justify-center">
-                                <button onClick={handleClearConfirm} className="bg-red-600 text-white font-bold text-xs py-1 px-4 rounded-md hover:bg-red-700">Yes, Clear</button>
-                                <button onClick={() => { playSound('click'); setIsConfirmingClear(false);}} className="bg-gray-600 text-white font-bold text-xs py-1 px-4 rounded-md hover:bg-gray-700">Cancel</button>
+                                <button onClick={handleClearConfirm} className="bg-[rgb(var(--color-danger-rgb))] text-white font-bold text-xs py-1 px-4 rounded-md hover:opacity-90">Yes, Clear</button>
+                                <button onClick={() => { playSound('click'); setIsConfirmingClear(false);}} className="bg-[var(--color-surface-4)] text-[var(--color-text-primary)] font-bold text-xs py-1 px-4 rounded-md hover:opacity-80">Cancel</button>
                             </div>
                         </div>
                     )}

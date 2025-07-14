@@ -1,24 +1,35 @@
 
+
+
 import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { DownloadIcon } from './icons/DownloadIcon.tsx';
 import { CloseIcon } from './icons/CloseIcon.tsx';
+import { RecordingStatus } from '../types.ts';
+import { PlayIcon } from './icons/PlayIcon.tsx';
+import { PauseIcon } from './icons/PauseIcon.tsx';
+import { StopIcon } from './icons/StopIcon.tsx';
 
-const ScreenRecorder = forwardRef((props, ref) => {
-    const [recordingState, setRecordingState] = useState<'idle' | 'countingDown' | 'recording'>('idle');
-    const [countdown, setCountdown] = useState<number>(3);
+interface ScreenRecorderProps {
+  onStatusChange: (status: RecordingStatus) => void;
+}
+
+interface ScreenRecorderHandle {
+  prepare: (includeMic: boolean) => void;
+  cancel: () => void;
+}
+
+const ScreenRecorder = forwardRef<ScreenRecorderHandle, ScreenRecorderProps>(({ onStatusChange }, ref) => {
+    const [status, setStatus] = useState<RecordingStatus>('idle');
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const mediaStreamRef = useRef<MediaStream | null>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
     const recordedChunksRef = useRef<Blob[]>([]);
-    const countdownTimerRef = useRef<any>(null);
 
-    useImperativeHandle(ref, () => ({
-        start: (includeMic: boolean) => {
-            prepareToRecord(includeMic);
-        }
-    }));
+    useEffect(() => {
+      onStatusChange(status);
+    }, [status, onStatusChange]);
 
     const cleanup = () => {
         if (mediaStreamRef.current) {
@@ -29,24 +40,22 @@ const ScreenRecorder = forwardRef((props, ref) => {
             audioContextRef.current.close();
             audioContextRef.current = null;
         }
-        if (countdownTimerRef.current) {
-            clearInterval(countdownTimerRef.current);
-            countdownTimerRef.current = null;
-        }
         mediaRecorderRef.current = null;
     };
     
-    const handleStopRecording = () => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-            mediaRecorderRef.current.stop();
-        } else {
+    useImperativeHandle(ref, () => ({
+        prepare: (includeMic: boolean) => {
+            prepareToRecord(includeMic);
+        },
+        cancel: () => {
             cleanup();
-            setRecordingState('idle');
+            setStatus('idle');
         }
-    };
+    }));
 
     const prepareToRecord = async (includeMic: boolean) => {
-        if (recordingState !== 'idle') return;
+        if (status !== 'idle') return;
+        setStatus('preparing');
         
         if (videoUrl) URL.revokeObjectURL(videoUrl);
         setVideoUrl(null);
@@ -117,28 +126,14 @@ const ScreenRecorder = forwardRef((props, ref) => {
                     const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
                     const url = URL.createObjectURL(blob);
                     setVideoUrl(url);
+                    setStatus('finished');
+                } else {
+                    setStatus('idle');
                 }
                 cleanup();
-                setRecordingState('idle');
             };
-
-            setCountdown(3);
-            setRecordingState('countingDown');
-
-            countdownTimerRef.current = setInterval(() => {
-                setCountdown(prev => {
-                    if (prev <= 1) {
-                        clearInterval(countdownTimerRef.current!);
-                        countdownTimerRef.current = null;
-                        if (mediaRecorderRef.current) {
-                            mediaRecorderRef.current.start();
-                            setRecordingState('recording');
-                        }
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
+            
+            setStatus('ready');
 
         } catch (err) {
             console.error("Error starting screen recording:", err);
@@ -148,13 +143,40 @@ const ScreenRecorder = forwardRef((props, ref) => {
                  alert(`An error occurred while starting the screen recording. Please check console for details.`);
             }
             cleanup();
-            setRecordingState('idle');
+            setStatus('idle');
         }
     };
     
+    const handleStartRecording = () => {
+      if (mediaRecorderRef.current && status === 'ready') {
+        mediaRecorderRef.current.start();
+        setStatus('recording');
+      }
+    }
+    const handlePauseRecording = () => {
+      if (mediaRecorderRef.current && status === 'recording') {
+        mediaRecorderRef.current.pause();
+        setStatus('paused');
+      }
+    }
+    const handleResumeRecording = () => {
+      if (mediaRecorderRef.current && status === 'paused') {
+        mediaRecorderRef.current.resume();
+        setStatus('recording');
+      }
+    }
+    const handleStopRecording = () => {
+        if (mediaRecorderRef.current && (status === 'recording' || status === 'paused')) {
+            mediaRecorderRef.current.stop();
+        }
+    };
+    const handleCancel = () => {
+      cleanup();
+      setStatus('idle');
+    }
+    
     useEffect(() => {
         return () => {
-            if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
             cleanup();
         };
     }, []);
@@ -163,7 +185,7 @@ const ScreenRecorder = forwardRef((props, ref) => {
         if (videoUrl) URL.revokeObjectURL(videoUrl);
         setVideoUrl(null);
         recordedChunksRef.current = [];
-        setRecordingState('idle');
+        setStatus('idle');
     };
 
     const handleDownload = () => {
@@ -176,37 +198,24 @@ const ScreenRecorder = forwardRef((props, ref) => {
         document.body.removeChild(a);
     };
 
-    if (recordingState === 'idle' && !videoUrl) return null;
-    if (recordingState === 'recording') return null;
+    if (status === 'idle') return null;
 
-    if (recordingState === 'countingDown') {
-        return (
-            <div className="fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-50 p-4">
-                <h2 className="text-8xl font-bold text-white font-mono">{countdown}</h2>
-                <p className="text-xl text-gray-200 mt-4">Recording will begin shortly...</p>
-                <div className="mt-8 bg-gray-900/80 p-3 rounded-lg border border-gray-700 max-w-md text-center">
-                    <p className="text-md text-gray-300">To stop recording, use the browser's native "Stop sharing" button.</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (videoUrl) {
+    if (status === 'finished' && videoUrl) {
         return (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                <div className="bg-gray-800 rounded-xl shadow-2xl p-4 border border-gray-700 max-w-4xl w-full flex flex-col gap-4">
+                <div className="bg-[var(--color-surface-3)] rounded-xl shadow-2xl p-4 border border-[var(--color-border-secondary)] max-w-4xl w-full flex flex-col gap-4">
                     <div className="flex justify-between items-center">
-                        <h3 className="text-xl font-bold text-purple-300">Recording Preview</h3>
-                        <button onClick={handleDiscard} className="text-gray-400 hover:text-white">
+                        <h3 className="text-xl font-bold text-[var(--color-accent-text)]">Recording Preview</h3>
+                        <button onClick={handleDiscard} className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]">
                             <CloseIcon />
                         </button>
                     </div>
                     <video src={videoUrl} controls autoPlay className="w-full rounded-lg bg-black" />
                     <div className="flex justify-end gap-3">
-                        <button onClick={handleDiscard} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                        <button onClick={handleDiscard} className="bg-[var(--color-surface-4)] hover:opacity-80 text-[var(--color-text-primary)] font-bold py-2 px-4 rounded-lg transition-colors">
                             Discard
                         </button>
-                        <button onClick={handleDownload} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                        <button onClick={handleDownload} className="flex items-center gap-2 bg-[var(--color-accent-1)] hover:opacity-90 text-white font-bold py-2 px-4 rounded-lg transition-colors">
                             <DownloadIcon />
                             Download
                         </button>
@@ -215,8 +224,59 @@ const ScreenRecorder = forwardRef((props, ref) => {
             </div>
         );
     }
+    
+    const renderControls = () => {
+      switch(status) {
+        case 'preparing':
+          return <p className="text-lg">Preparing recorder...</p>;
+        case 'ready':
+          return (
+            <>
+              <p className="text-lg">Ready to Record</p>
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={handleStartRecording} 
+                  className="tool-button flex items-center gap-2 !text-base !px-6 !py-3 bg-[rgba(var(--color-danger-rgb),0.2)] border-[rgba(var(--color-danger-rgb),0.5)] text-[rgb(var(--color-danger-rgb))] hover:bg-[rgba(var(--color-danger-rgb),0.4)] hover:border-[rgba(var(--color-danger-rgb),0.8)]"
+                >
+                  <div className="w-4 h-4 rounded-full bg-[rgb(var(--color-danger-rgb))] animate-pulse"></div> Record
+                </button>
+                <button onClick={handleCancel} className="tool-button !text-base">Cancel</button>
+              </div>
+            </>
+          );
+        case 'recording':
+        case 'paused':
+          return (
+             <>
+              <div className="flex items-center gap-2 text-lg">
+                <div className={`w-4 h-4 rounded-full bg-[rgb(var(--color-danger-rgb))] ${status === 'recording' ? 'animate-pulse' : ''}`}></div>
+                {status === 'recording' ? 'Recording' : 'Paused'}
+              </div>
+              <div className="flex items-center gap-4">
+                <button onClick={status === 'recording' ? handlePauseRecording : handleResumeRecording} className="tool-button !p-3">
+                    {status === 'recording' ? <PauseIcon /> : <PlayIcon />}
+                </button>
+                <button 
+                  onClick={handleStopRecording} 
+                  className="tool-button !p-3 bg-[rgba(var(--color-danger-rgb),0.4)] hover:bg-[rgba(var(--color-danger-rgb),0.6)] border-[rgba(var(--color-danger-rgb),0.8)] text-[rgb(var(--color-danger-rgb))]"
+                >
+                    <StopIcon />
+                </button>
+              </div>
+            </>
+          )
+        default:
+          return null;
+      }
+    }
 
-    return null;
+    return (
+        <div className="fixed bottom-0 left-0 right-0 p-4 flex justify-center z-50 pointer-events-none">
+            <div className="bg-[var(--color-surface-2)]/80 backdrop-blur-md border border-[var(--color-border-secondary)] rounded-xl shadow-2xl p-3 flex items-center justify-center gap-6 text-[var(--color-text-primary)] pointer-events-auto">
+              {renderControls()}
+            </div>
+        </div>
+    );
 });
 
 export default ScreenRecorder;

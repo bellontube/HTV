@@ -23,10 +23,10 @@ const Loader: React.FC = () => {
 
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4 my-8 p-6 bg-gray-800/50 rounded-xl w-full">
-      <div className="w-12 h-12 border-4 border-t-purple-500 border-gray-600 rounded-full animate-spin"></div>
-      <p className="text-gray-300 text-lg font-semibold">Generating Images</p>
-      <p className="text-gray-400 text-sm text-center transition-opacity duration-500 h-10 flex items-center">
+    <div className="flex flex-col items-center justify-center gap-4 my-8 p-6 bg-[var(--color-surface-3)]/50 rounded-xl w-full">
+      <div className="w-12 h-12 border-4 border-t-[var(--color-accent-1)] border-[var(--color-border-secondary)] rounded-full animate-spin"></div>
+      <p className="text-[var(--color-text-secondary)] text-lg font-semibold">Generating Images</p>
+      <p className="text-[var(--color-text-muted)] text-sm text-center transition-opacity duration-500 h-10 flex items-center">
         {loadingTexts[currentTextIndex]}
       </p>
     </div>

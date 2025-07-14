@@ -14,19 +14,116 @@
     <!-- FFmpeg for in-browser video processing -->
     <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.min.js"></script>
     <style>
+      :root {
+        --font-primary: 'Noto Sans', sans-serif;
+        --font-secondary: 'Lora', serif;
+      }
+      /* --- Indigo Empress Theme (Default) --- */
+      :root.theme-indigo-empress {
+        --color-background-main: #0c2b35;
+        --color-background-gradient-1: #083344;
+        --color-background-gradient-2: #022c43;
+        --color-background-gradient-3: #051923;
+        --color-background-gradient-4: #000000;
+        --color-surface-1-rgb: 15, 30, 40;
+        --color-surface-2: #083344;
+        --color-surface-3: #0c4a6e;
+        --color-surface-4: #155e75;
+        --color-text-primary: #f0f9ff;
+        --color-text-secondary: #e0f2f1;
+        --color-text-muted: #94a3b8;
+        --color-text-inverted: #083344;
+        --color-border-primary-rgb: 244, 114, 182;
+        --color-border-secondary: #155e75;
+        --color-accent-1: #db2777;
+        --color-accent-2: #f472b6;
+        --color-accent-text: #f9a8d4;
+        --color-accent-text-2: #fbcfe8;
+        --color-danger-rgb: 239, 68, 68;
+        --color-success-rgb: 34, 197, 94;
+        --color-warning-rgb: 250, 204, 21;
+        --color-brand-youtube: #ff0000;
+        --color-sparkle: #fce7f3;
+        --color-shadow-primary: rgba(219, 39, 119, 0.2);
+        --color-shadow-secondary: rgba(0,0,0,0.4);
+        --main-title-gradient: linear-gradient(to right, #f9a8d4, #f472b6, #db2777);
+      }
+      /* --- Ruby Royalty Theme (Light) --- */
+      :root.theme-ruby-royalty {
+        --color-background-main: #fffaf7;
+        --color-background-gradient-1: #fff8f5;
+        --color-background-gradient-2: #ffede9;
+        --color-background-gradient-3: #ffe4e1;
+        --color-background-gradient-4: #ffdad6;
+        --color-surface-1-rgb: 255, 255, 255;
+        --color-surface-2: #ffffff;
+        --color-surface-3: #fff8f5;
+        --color-surface-4: #fee2e2;
+        --color-text-primary: #450a0a;
+        --color-text-secondary: #7f1d1d;
+        --color-text-muted: #991b1b;
+        --color-text-inverted: #ffffff;
+        --color-border-primary-rgb: 220, 38, 38;
+        --color-border-secondary: #fecaca;
+        --color-accent-1: #dc2626;
+        --color-accent-2: #b91c1c;
+        --color-accent-text: #ef4444;
+        --color-accent-text-2: #991b1b;
+        --color-danger-rgb: 220, 38, 38;
+        --color-success-rgb: 22, 163, 74;
+        --color-warning-rgb: 245, 158, 11;
+        --color-brand-youtube: #ff0000;
+        --color-sparkle: #991b1b;
+        --color-shadow-primary: rgba(220, 38, 38, 0.2);
+        --color-shadow-secondary: rgba(100, 116, 139, 0.2);
+        --main-title-gradient: linear-gradient(to right, #b91c1c, #dc2626, #ef4444);
+      }
+      /* --- Nollywood Noir Theme (High Contrast Dark) --- */
+      :root.theme-nollywood-noir {
+        --color-background-main: #000000;
+        --color-background-gradient-1: #000000;
+        --color-background-gradient-2: #101010;
+        --color-background-gradient-3: #0a0a0a;
+        --color-background-gradient-4: #181818;
+        --color-surface-1-rgb: 10, 10, 10;
+        --color-surface-2: #181818;
+        --color-surface-3: #262626;
+        --color-surface-4: #404040;
+        --color-text-primary: #ffffff;
+        --color-text-secondary: #d4d4d4;
+        --color-text-muted: #a3a3a3;
+        --color-text-inverted: #000000;
+        --color-border-primary-rgb: 96, 165, 250;
+        --color-border-secondary: #404040;
+        --color-accent-1: #3b82f6;
+        --color-accent-2: #60a5fa;
+        --color-accent-text: #93c5fd;
+        --color-accent-text-2: #bfdbfe;
+        --color-danger-rgb: 248, 113, 113;
+        --color-success-rgb: 74, 222, 128;
+        --color-warning-rgb: 250, 204, 21;
+        --color-brand-youtube: #ff0000;
+        --color-sparkle: #ffffff;
+        --color-shadow-primary: rgba(59, 130, 246, 0.2);
+        --color-shadow-secondary: rgba(0,0,0,0.6);
+        --main-title-gradient: linear-gradient(to right, #60a5fa, #93c5fd, #ffffff);
+      }
+      
       html, body {
         height: 100vh;
         overflow: hidden;
+        background-color: var(--color-background-main);
       }
       body {
-        font-family: 'Noto Sans', sans-serif;
+        font-family: var(--font-primary);
+        color: var(--color-text-primary);
       }
       .font-lora {
-        font-family: 'Lora', serif;
+        font-family: var(--font-secondary);
       }
-      .editable-book-title:hover {
+      .editable-title:hover {
         background-color: rgba(255,255,255,0.05);
-        box-shadow: 0 0 10px rgba(216, 180, 254, 0.3);
+        box-shadow: 0 0 10px var(--color-shadow-primary);
       }
 
       /* --- Living Background --- */
@@ -36,46 +133,170 @@
         100% { background-position: 0% 50%; }
       }
       .living-background {
-        background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1c1c3c);
+        background: linear-gradient(-45deg, var(--color-background-gradient-1), var(--color-background-gradient-2), var(--color-background-gradient-3), var(--color-background-gradient-4));
         background-size: 400% 400%;
         animation: gradient-move 30s ease infinite;
       }
       
       /* --- Drag & Drop Feedback --- */
       .drag-over-active {
-        outline: 2px dashed #a78bfa; /* purple-400 */
+        outline: 2px dashed var(--color-accent-text);
         outline-offset: -8px;
-        background-color: rgba(167, 139, 250, 0.1);
+        background-color: rgba(var(--color-border-primary-rgb), 0.1);
       }
       
       .timeline-drag-over {
-        background-color: rgba(167, 139, 250, 0.2);
-        outline: 2px dashed #a78bfa;
+        background-color: rgba(var(--color-border-primary-rgb), 0.2);
+        outline: 2px dashed var(--color-accent-text);
       }
 
-      /* --- Book Styles --- */
-      .book-container {
-        transform-style: preserve-3d;
-        transition: transform 0.5s ease-in-out;
+      /* --- Living TV Styles (Redesigned) --- */
+      .living-tv-container {
+          width: 100%;
+          max-width: 550px;
+          aspect-ratio: 4 / 3;
+          position: relative;
+          transform-style: preserve-3d;
+          transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+          /* CSS variables for mouse interaction */
+          --rx: 8deg;
+          --ry: -12deg;
+          transform: perspective(2500px) rotateX(var(--rx)) rotateY(var(--ry));
       }
-      .book-container:hover {
-        transform: scale(1.05) rotateY(-20deg) rotateX(10deg) !important;
+      .living-tv-body {
+          position: absolute;
+          inset: 0;
+          background-image:
+              linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 20%), /* Top-left highlight */
+              linear-gradient(to bottom, #4a3f35, #2a221a); /* Polished wood base */
+          border: 12px solid #201812;
+          border-radius: 35px;
+          box-shadow: 
+              inset 0 0 25px rgba(0,0,0,0.8), /* Inner depth shadow */
+              15px 30px 50px -10px var(--color-shadow-secondary), /* Main outer shadow */
+              0 0 0 3px #382c21; /* Outer bezel edge */
+          display: flex;
+          padding: 3%;
+          gap: 3%;
       }
-      .book-cover {
-        background: linear-gradient(145deg, #3a2d58, #2c2141);
-        box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 5px 5px 20px rgba(0,0,0,0.4);
-        transform: translateZ(2px);
+      .living-tv-screen-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
       }
-      .book-cover::before {
+      .living-tv-screen-wrapper {
+        flex-grow: 1;
+        background: #111;
+        border-radius: 18px; /* Slightly curved corners */
+        padding: 2%;
+        box-shadow: inset 0 0 15px 5px #000;
+        position: relative;
+        overflow: hidden; /* For gloss effect */
+      }
+      .living-tv-screen {
+        width: 100%;
+        height: 100%;
+        background: var(--color-surface-2);
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .living-tv-screen::before { /* Glossy reflection */
+          content: '';
+          position: absolute;
+          top: -10%; left: -5%;
+          width: 120%; height: 70%;
+          background: linear-gradient(to bottom, rgba(255,255,255,0.1), transparent 80%);
+          transform: skewY(-10deg);
+          border-radius: 20px;
+          pointer-events: none;
+          z-index: 2;
+      }
+      @keyframes scanline {
+        0% { background-position: 0 0; }
+        100% { background-position: 0 4px; }
+      }
+      .living-tv-screen::after { /* Scanlines */
         content: '';
         position: absolute;
-        top: 15px;
-        left: 15px;
-        right: 15px;
-        bottom: 15px;
-        border: 2px solid rgba(192, 132, 252, 0.2);
-        box-shadow: 0 0 5px rgba(192, 132, 252, 0.1);
-        border-radius: 2px;
+        inset: 0;
+        background-image: linear-gradient(to bottom, rgba(var(--color-text-primary), 0.05), transparent 1px);
+        background-size: 100% 4px;
+        animation: scanline 0.2s linear infinite;
+        opacity: 0.3;
+        pointer-events: none;
+      }
+      .living-tv-brand {
+        text-align: center;
+        font-family: var(--font-secondary);
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--color-text-muted);
+        opacity: 0.7;
+      }
+      .living-tv-controls {
+        width: 100px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        padding: 20px 0;
+      }
+      .living-tv-knob {
+        width: 50px; height: 50px;
+        background: radial-gradient(circle at 50% 40%, #c5c5c5, #787878 70%), linear-gradient(to top, #333, #666);
+        border: 3px solid #222;
+        border-radius: 50%;
+        box-shadow: 2px 3px 6px rgba(0,0,0,0.6), inset 0px 1px 2px #fff;
+        position: relative;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .living-tv-knob:hover {
+        transform: scale(1.05);
+      }
+      .living-tv-knob::before { /* Indicator line */
+          content: '';
+          position: absolute;
+          top: 5px;
+          left: 50%;
+          width: 3px;
+          height: 12px;
+          background: #2a2a2a;
+          transform: translateX(-50%);
+          border-radius: 2px;
+      }
+      .living-tv-grille {
+        width: 90%;
+        height: 120px;
+        background: radial-gradient(circle, transparent 60%, rgba(0,0,0,0.3)), repeating-linear-gradient(45deg, #383838, #383838 1px, #2f2f2f 1px, #2f2f2f 4px);
+        border: 2px solid #222;
+        border-radius: 10px;
+        box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+      }
+      .living-tv-stand {
+          position: absolute;
+          bottom: -50px;
+          left: 15%; right: 15%;
+          height: 50px;
+          background: linear-gradient(to top, #2a221a, #4a3f35);
+          transform: perspective(300px) rotateX(-20deg);
+          border-radius: 0 0 15px 15px;
+          box-shadow: 5px 10px 20px -5px var(--color-shadow-secondary);
+          border: 3px solid #201812;
+      }
+      .living-tv-stand::before { /* Pedestal foot */
+          content: '';
+          position: absolute;
+          bottom: -15px;
+          left: 10%; right: 10%;
+          height: 15px;
+          background: linear-gradient(to top, #1a130f, #2a221a);
+          border-radius: 5px;
+          box-shadow: 0 5px 10px var(--color-shadow-secondary);
+          border: 2px solid #110d0a;
       }
 
       /* --- Animations --- */
@@ -85,17 +306,17 @@
       }
       .fade-in { animation: fade-in 0.5s ease-out forwards; }
       
-      @keyframes book-fly-out {
-        0% { transform: scale(1.05) rotateY(-20deg) rotateX(10deg) translateZ(0); opacity: 1; }
-        100% { transform: scale(2.5) rotateY(-10deg) rotateX(5deg) translateZ(500px); opacity: 0; }
+      @keyframes tv-zoom-in-to-studio {
+        0% { transform: scale(1) translateZ(0); opacity: 1; }
+        100% { transform: scale(3.5) translateZ(600px) translateY(-5%); opacity: 0; }
       }
-      .book-exit-to-studio { animation: book-fly-out 0.8s ease-in forwards; }
+      .tv-zoom-in-to-studio { animation: tv-zoom-in-to-studio 0.8s ease-in forwards; }
 
-      @keyframes book-fly-in-and-close {
-        0% { transform: scale(2.5) rotateY(-10deg) rotateX(5deg) translateZ(500px); opacity: 0; }
-        100% { transform: rotateY(-28deg) rotateX(8deg) translateZ(0); opacity: 1; }
+      @keyframes tv-zoom-out-from-studio {
+        0% { transform: scale(3.5) translateZ(600px) translateY(-5%); opacity: 0; }
+        100% { transform: perspective(2500px) rotateX(var(--rx, 8deg)) rotateY(var(--ry, -12deg)) translateZ(0); opacity: 1; }
       }
-      .book-enter-from-studio { animation: book-fly-in-and-close 1s ease-out forwards; }
+      .tv-zoom-out-from-studio { animation: tv-zoom-out-from-studio 1s ease-out forwards; }
       
       .exit-studio-button {
         position: absolute;
@@ -104,7 +325,7 @@
         z-index: 50;
         transition: all 0.2s ease-in-out;
       }
-      .exit-studio-button:hover { transform: scale(1.2); color: #f87171; /* red-400 */ }
+      .exit-studio-button:hover { transform: scale(1.2); color: rgb(var(--color-danger-rgb)); }
       
       /* --- Slideshow Transitions --- */
       @keyframes ken-burns-gentle {
@@ -124,104 +345,67 @@
         position: absolute;
         width: 4px;
         height: 4px;
-        background: #e9d5ff; /* purple-200 */
+        background: var(--color-sparkle);
         border-radius: 50%;
-        box-shadow: 0 0 5px #c084fc, 0 0 10px #c084fc, 0 0 15px #c084fc;
+        box-shadow: 0 0 5px var(--color-accent-text), 0 0 10px var(--color-accent-text), 0 0 15px var(--color-accent-text);
         animation: sparkle 1.5s infinite;
       }
       
-      /* --- Color Palette --- */
-      .palette-icon {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        z-index: 10;
-        opacity: 0;
-        transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
-        transform: scale(0.9);
-      }
-      .group:hover .palette-icon {
-        opacity: 1;
-        transform: scale(1);
-      }
-      
       /* --- Footer & Modal Controls --- */
-      .footer-control-button, .tool-button {
+      .tool-button {
         background-color: transparent;
-        border: 1px solid rgba(129, 140, 248, 0.3); /* indigo-300/30 */
-        color: #a5b4fc; /* indigo-300 */
+        border: 1px solid rgba(var(--color-border-primary-rgb), 0.3);
+        color: var(--color-accent-text);
         border-radius: 0.5rem;
         padding: 8px 16px;
         transition: all 0.2s ease-in-out;
         font-weight: 600;
         font-size: 14px;
       }
-      .footer-control-button:hover, .tool-button:hover {
-        background-color: rgba(129, 140, 248, 0.1);
-        border-color: rgba(129, 140, 248, 0.5);
+      .tool-button:hover:not(:disabled) {
+        background-color: rgba(var(--color-border-primary-rgb), 0.1);
+        border-color: rgba(var(--color-border-primary-rgb), 0.5);
         transform: scale(1.05);
       }
-      .footer-control-button {
-         border-radius: 9999px;
-         padding: 6px;
+      .tool-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
       }
-      /* --- Exporter Watermark Preview --- */
-      .watermark-position-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: 1fr 1fr;
-        gap: 0.5rem;
+      .footer-control-button {
+        background-color: transparent;
+        border: 1px solid rgba(var(--color-border-primary-rgb), 0.3);
+        color: var(--color-accent-text);
+        border-radius: 9999px;
+        padding: 6px;
+        transition: all 0.2s ease-in-out;
+      }
+      .footer-control-button:hover:not(:disabled) {
+        background-color: rgba(var(--color-border-primary-rgb), 0.1);
+        border-color: rgba(var(--color-border-primary-rgb), 0.5);
+        transform: scale(1.05);
       }
       
       /* --- Video Editor Panel --- */
       .video-editor-panel {
-        background-color: rgba(16, 20, 32, 0.85);
+        background-color: rgba(var(--color-surface-1-rgb), 0.85);
         backdrop-filter: blur(10px);
-        border-top: 1px solid rgba(129, 140, 248, 0.2);
+        border-top: 1px solid rgba(var(--color-border-primary-rgb), 0.2);
         box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
       }
       .timeline-item.active {
-        outline: 2px solid #a78bfa; /* purple-400 */
-        box-shadow: 0 0 15px rgba(167, 139, 250, 0.4);
+        outline: 2px solid var(--color-accent-text);
+        box-shadow: 0 0 15px var(--color-shadow-primary);
       }
        .timeline-item.dragging {
         opacity: 0.5;
         transform: scale(1.05);
       }
 
-      /* --- App Header/Footer Transitions --- */
-      .main-header, .main-footer {
-        transition: max-height 0.4s ease-out, opacity 0.3s ease-out, padding 0.4s ease-out, border-width 0.4s ease-out;
-        max-height: 200px; /* Ample space for content */
-        overflow: hidden;
-      }
-      .main-header.hidden, .main-footer.hidden {
-        max-height: 0;
-        opacity: 0;
-        padding-top: 0;
-        padding-bottom: 0;
-        border-width: 0;
-      }
-
       /* --- Record Button --- */
-       .record-dot-button {
-        background: transparent;
-        border: none;
-        padding: 4px;
-        border-radius: 50%;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background-color 0.2s;
-      }
-      .record-dot-button:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-      }
-      .record-dot {
+       .record-dot {
           width: 18px;
           height: 18px;
-          background-color: #ef4444; /* red-500 */
+          background-color: rgb(var(--color-danger-rgb));
           border-radius: 50%;
           animation: pulse-record 2s infinite ease-in-out;
       }
@@ -229,21 +413,67 @@
       @keyframes pulse-record {
           0% {
               transform: scale(0.95);
-              box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+              box-shadow: 0 0 0 0 rgba(var(--color-danger-rgb), 0.7);
           }
           70% {
               transform: scale(1);
-              box-shadow: 0 0 0 5px rgba(239, 68, 68, 0);
+              box-shadow: 0 0 0 5px rgba(var(--color-danger-rgb), 0);
           }
           100% {
               transform: scale(0.95);
-              box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+              box-shadow: 0 0 0 0 rgba(var(--color-danger-rgb), 0);
           }
       }
       
       .record-dot.paused {
         animation-play-state: paused;
-        background-color: #f87171; /* red-400 */
+        background-color: rgb(var(--color-danger-rgb));
+      }
+      
+      /* --- Range Input Styles --- */
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        background: transparent;
+        cursor: pointer;
+      }
+      input[type="range"]:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      input[type="range"]::-webkit-slider-runnable-track {
+        background-color: var(--color-surface-4);
+        height: 0.25rem;
+        border-radius: 9999px;
+      }
+      input[type="range"]::-moz-range-track {
+        background-color: var(--color-surface-4);
+        height: 0.25rem;
+        border-radius: 9999px;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        margin-top: -4px;
+        background-color: var(--color-accent-text);
+        height: 1rem;
+        width: 1rem;
+        border-radius: 9999px;
+      }
+      input[type="range"]::-moz-range-thumb {
+        border: none;
+        border-radius: 9999px;
+        background-color: var(--color-accent-text);
+        height: 1rem;
+        width: 1rem;
+      }
+      input[type="range"]:focus::-webkit-slider-thumb {
+        outline: 3px solid rgba(var(--color-border-primary-rgb), 0.5);
+        outline-offset: 2px;
+      }
+       input[type="range"]:focus::-moz-range-thumb {
+        outline: 3px solid rgba(var(--color-border-primary-rgb), 0.5);
+        outline-offset: 2px;
       }
     </style>
   <script type="importmap">

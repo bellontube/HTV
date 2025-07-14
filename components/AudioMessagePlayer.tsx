@@ -1,5 +1,4 @@
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { PlayIcon } from './icons/PlayIcon.tsx';
 import { PauseIcon } from './icons/PauseIcon.tsx';
 import { CloseIcon } from './icons/CloseIcon.tsx';
@@ -8,33 +7,25 @@ interface AudioMessagePlayerProps {
   id: string;
   title?: string;
   isPlaying: boolean;
+  audioUrl: string | null;
   onPlayRequest: () => void;
   onPauseRequest: () => void;
   onEnded: () => void;
+  onFileChange: (file: File) => void;
+  onFileRemove: () => void;
 }
 
 const AudioMessagePlayer = React.forwardRef<HTMLAudioElement, AudioMessagePlayerProps>(
-  ({ id, title, isPlaying, onPlayRequest, onPauseRequest, onEnded }, ref) => {
-    const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  ({ id, title, isPlaying, audioUrl, onPlayRequest, onPauseRequest, onEnded, onFileChange, onFileRemove }, ref) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    useEffect(() => {
-        const url = audioUrl;
-        return () => {
-            if (url) {
-                URL.revokeObjectURL(url);
-            }
-        };
-    }, [audioUrl]);
-
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
-            if (audioUrl) {
-                URL.revokeObjectURL(audioUrl);
-            }
-            setAudioUrl(URL.createObjectURL(file));
+            onFileChange(file);
         }
+        // Reset file input to allow selecting the same file again
+        if(event.target) event.target.value = '';
     };
 
     const handlePlayPause = () => {
@@ -50,14 +41,15 @@ const AudioMessagePlayer = React.forwardRef<HTMLAudioElement, AudioMessagePlayer
         if (isPlaying) {
            onPauseRequest();
         }
-        setAudioUrl(null);
+        onFileRemove();
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
     
     const handleAudioEnd = () => {
         onEnded();
-        if ((ref as React.RefObject<HTMLAudioElement>)?.current) {
-            (ref as React.RefObject<HTMLAudioElement>).current!.currentTime = 0;
+        const audioEl = (ref as React.RefObject<HTMLAudioElement>)?.current;
+        if (audioEl) {
+            audioEl.currentTime = 0;
         }
     };
 
@@ -67,12 +59,21 @@ const AudioMessagePlayer = React.forwardRef<HTMLAudioElement, AudioMessagePlayer
                 ref={ref}
                 src={audioUrl ?? undefined}
                 onEnded={handleAudioEnd}
+                onPause={onPauseRequest}
+                onPlay={onPlayRequest}
             />
-            <input id={id} ref={fileInputRef} type="file" accept="audio/*" onChange={handleFileChange} className="hidden" />
+            <input 
+                id={id} 
+                ref={fileInputRef} 
+                type="file" 
+                accept="audio/*" 
+                onChange={handleFileSelect} 
+                className="hidden" 
+            />
 
             {!audioUrl ? (
-                <label htmlFor={id} className="tool-button !p-2 cursor-pointer !border-gray-600" title={title || "Add custom audio"}>
-                    <PlayIcon className="h-5 w-5 text-gray-500" />
+                <label htmlFor={id} className="tool-button !p-2 cursor-pointer !border-[var(--color-border-secondary)]" title={title || "Add custom audio"}>
+                    <PlayIcon className="h-5 w-5 text-[var(--color-text-muted)]" />
                 </label>
             ) : (
                 <button onClick={handlePlayPause} className="tool-button !p-2" aria-label={isPlaying ? `Pause ${title || 'custom audio'}` : `Play ${title || 'custom audio'}`} title={title}>
@@ -81,7 +82,7 @@ const AudioMessagePlayer = React.forwardRef<HTMLAudioElement, AudioMessagePlayer
             )}
             
             {audioUrl && (
-                <button onClick={handleRemoveAudio} className="tool-button !p-2 !text-gray-400 hover:!text-red-400 hover:!border-red-600 hover:!bg-red-900/50" aria-label={`Remove ${title || 'custom audio'}`} title={`Remove ${title || 'custom audio'}`}>
+                <button onClick={handleRemoveAudio} className="tool-button !p-2 !text-[var(--color-text-muted)] hover:!text-[rgb(var(--color-danger-rgb))] hover:!border-[rgb(var(--color-danger-rgb))] hover:!bg-[rgba(var(--color-danger-rgb),0.2)]" aria-label={`Remove ${title || 'custom audio'}`} title={`Remove ${title || 'custom audio'}`}>
                     <CloseIcon />
                 </button>
             )}

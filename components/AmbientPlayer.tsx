@@ -110,17 +110,17 @@ const AmbientPlayer: React.FC = () => {
     const showControls = currentTrackKey !== 'off' && !isUiMuted;
 
     return (
-        <div className="flex items-center gap-2 text-indigo-300">
+        <div className="flex items-center gap-2 text-[var(--color-accent-text)]">
              <audio ref={audioRef} loop />
             <MusicNoteIcon />
             <select
                 value={currentTrackKey}
                 onChange={handleTrackChange}
-                className="bg-transparent border-none text-indigo-300 text-xs focus:ring-0 p-0 pr-6"
+                className="bg-transparent border-none text-[var(--color-accent-text)] text-xs focus:ring-0 p-0 pr-6"
                 aria-label="Select ambient soundscape"
             >
                 {Object.entries(soundscapes).map(([key, {name}]) => (
-                    <option key={key} value={key} className="bg-gray-800">{name}</option>
+                    <option key={key} value={key} className="bg-[var(--color-surface-3)] text-[var(--color-text-primary)]">{name}</option>
                 ))}
             </select>
             <div className={`flex items-center gap-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
@@ -131,7 +131,7 @@ const AmbientPlayer: React.FC = () => {
                     aria-label={isLoading ? "Loading ambient sound" : isPlaying ? "Pause ambient sound" : "Play ambient sound"}
                  >
                     {isLoading
-                        ? <div className="h-5 w-5 border-2 border-t-indigo-400 border-gray-600 rounded-full animate-spin"></div>
+                        ? <div className="h-5 w-5 border-2 border-t-[var(--color-accent-text)] border-[var(--color-border-secondary)] rounded-full animate-spin"></div>
                         : isPlaying ? <PauseIcon className="h-5 w-5" /> : <PlayIcon className="h-5 w-5" />}
                 </button>
                 <input
@@ -141,7 +141,7 @@ const AmbientPlayer: React.FC = () => {
                     step="0.05"
                     value={volume}
                     onChange={(e) => setVolume(Number(e.target.value))}
-                    className="w-16 h-1 bg-indigo-900 rounded-lg appearance-none cursor-pointer range-sm"
+                    className="w-16"
                     aria-label="Ambient sound volume"
                  />
             </div>

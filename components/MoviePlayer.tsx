@@ -5,7 +5,7 @@ import { MediaAsset } from '../types.ts';
 import { YouTubeIcon } from './icons/YouTubeIcon.tsx';
 
 const UploadIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-500 group-hover:text-purple-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent-text)] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
     </svg>
 );
@@ -145,7 +145,7 @@ const MoviePlayer = forwardRef<{ seekTo: (time: number) => void; }, MoviePlayerP
                             <form onSubmit={onYoutubeUrlSubmit} className="w-full max-w-md">
                                 <label htmlFor="youtube-url" className="flex items-center justify-center gap-3 mb-3">
                                     <YouTubeIcon />
-                                    <h3 className="text-xl font-semibold text-gray-300">Play YouTube Video</h3>
+                                    <h3 className="text-xl font-semibold text-[var(--color-text-secondary)]">Play YouTube Video</h3>
                                 </label>
                                 <div className="flex gap-2">
                                     <input
@@ -154,22 +154,22 @@ const MoviePlayer = forwardRef<{ seekTo: (time: number) => void; }, MoviePlayerP
                                         value={youtubeUrlInput}
                                         onChange={(e) => onYoutubeUrlInputChange(e.target.value)}
                                         placeholder="Paste a YouTube video URL to play..."
-                                        className="w-full p-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
+                                        className="w-full p-3 bg-[var(--color-surface-2)] border border-[var(--color-border-secondary)] rounded-lg text-[var(--color-text-primary)] focus:ring-2 focus:ring-[var(--color-brand-youtube)] focus:border-[var(--color-brand-youtube)] transition-all"
                                     />
-                                    <button type="submit" className="bg-red-600 text-white font-bold py-3 px-5 rounded-lg hover:bg-red-700 transition-colors">
+                                    <button type="submit" className="bg-[var(--color-brand-youtube)] text-white font-bold py-3 px-5 rounded-lg hover:opacity-80 transition-opacity">
                                         Load
                                     </button>
                                 </div>
                             </form>
                             <div className="flex items-center gap-4 w-full max-w-md">
-                                <hr className="flex-grow border-gray-700" />
-                                <span className="text-gray-500">OR</span>
-                                <hr className="flex-grow border-gray-700" />
+                                <hr className="flex-grow border-[var(--color-border-secondary)]" />
+                                <span className="text-[var(--color-text-muted)]">OR</span>
+                                <hr className="flex-grow border-[var(--color-border-secondary)]" />
                             </div>
-                            <label htmlFor="movie-upload" className="cursor-pointer group flex flex-col items-center justify-center text-center p-4 w-full h-full border-2 border-dashed border-gray-700 rounded-xl hover:border-purple-500 hover:bg-gray-900/50 transition-all">
+                            <label htmlFor="movie-upload" className="cursor-pointer group flex flex-col items-center justify-center text-center p-4 w-full h-full border-2 border-dashed border-[var(--color-border-secondary)] rounded-xl hover:border-[var(--color-accent-text)] hover:bg-[var(--color-surface-2)]/50 transition-all">
                                 <UploadIcon />
-                                <h3 className="mt-2 text-xl font-semibold text-gray-300 group-hover:text-white">Upload Local File</h3>
-                                <p className="mt-1 text-sm text-gray-500">{isDraggingOver ? 'Drop the file to upload' : 'Click or drag & drop a video file'}</p>
+                                <h3 className="mt-2 text-xl font-semibold text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)]">Upload Local File</h3>
+                                <p className="mt-1 text-sm text-[var(--color-text-muted)]">{isDraggingOver ? 'Drop the file to upload' : 'Click or drag & drop a video file'}</p>
                                 <input
                                     id="movie-upload"
                                     ref={fileInputRef}
@@ -182,7 +182,7 @@ const MoviePlayer = forwardRef<{ seekTo: (time: number) => void; }, MoviePlayerP
                             </label>
                         </div>
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-500">
+                        <div className="w-full h-full flex items-center justify-center text-[var(--color-text-muted)]">
                              <p>No video selected for preview.</p>
                         </div>
                     )

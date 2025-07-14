@@ -24,8 +24,8 @@ const CreativeSparkLoader: React.FC<CreativeSparkLoaderProps> = ({ text }) => {
                 {sparks}
             </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none">
-                 <div className="w-12 h-12 border-4 border-t-purple-500 border-gray-700 rounded-full animate-spin"></div>
-                 <p className="text-gray-200 text-lg font-semibold mt-2">{text}</p>
+                 <div className="w-12 h-12 border-4 border-t-[var(--color-accent-1)] border-[var(--color-border-secondary)] rounded-full animate-spin"></div>
+                 <p className="text-[var(--color-text-primary)] text-lg font-semibold mt-2">{text}</p>
             </div>
         </div>
     );
