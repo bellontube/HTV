@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import { SoundProvider } from './contexts/SoundProvider.tsx';
+import { StudioProvider } from './contexts/StudioProvider.tsx';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -12,7 +13,9 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <SoundProvider>
-      <App />
+      <StudioProvider>
+        <App />
+      </StudioProvider>
     </SoundProvider>
   </React.StrictMode>
 );

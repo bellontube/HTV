@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import WelcomeScreen from './components/WelcomeScreen.tsx';
 import GoodbyeScreen from './components/GoodbyeScreen.tsx';
 import StudioPage from './components/pages/StudioPage.tsx';
-import { StudioProvider } from './contexts/StudioProvider.tsx';
 import { useSound } from './hooks/useSound.tsx';
 import { SoundOnIcon } from './components/icons/SoundOnIcon.tsx';
 import { SoundOffIcon } from './components/icons/SoundOffIcon.tsx';
@@ -299,7 +298,7 @@ const App: React.FC = () => {
                   movieRef={movieRef}
                 />;
       case 'studio':
-        return ( <StudioProvider> <StudioPage onAddMediaAssets={handleAddMediaAssets} activeMediaAsset={activeMediaAsset} movieRef={movieRef} movieSource={movieSource} youtubeUrlInput={youtubeUrlInput} onYoutubeUrlInputChange={setYoutubeUrlInput} onYoutubeUrlSubmit={handleYoutubeUrlSubmit} isMoviePlayerActive={activePlayers.has('movie')} onMoviePlayRequest={handleMoviePlayRequest} onMoviePauseRequest={handleMoviePauseRequest} onMovieEnded={handleMovieEnded} isLeftStudioActive={activePlayers.has('studio-left')} isRightStudioActive={activePlayers.has('studio-right')} onStudioPlayRequest={handleStudioPlayRequest} onStudioPauseRequest={handleStudioPauseRequest} /> </StudioProvider> );
+        return ( <StudioPage onAddMediaAssets={handleAddMediaAssets} activeMediaAsset={activeMediaAsset} movieRef={movieRef} movieSource={movieSource} youtubeUrlInput={youtubeUrlInput} onYoutubeUrlInputChange={setYoutubeUrlInput} onYoutubeUrlSubmit={handleYoutubeUrlSubmit} isMoviePlayerActive={activePlayers.has('movie')} onMoviePlayRequest={handleMoviePlayRequest} onMoviePauseRequest={handleMoviePauseRequest} onMovieEnded={handleMovieEnded} isLeftStudioActive={activePlayers.has('studio-left')} isRightStudioActive={activePlayers.has('studio-right')} onStudioPlayRequest={handleStudioPlayRequest} onStudioPauseRequest={handleStudioPauseRequest} /> );
       case 'goodbye':
         return <GoodbyeScreen featureTitle={featureTitle} onAnimationEnd={() => { setCurrentView('welcome'); }} />;
     }
